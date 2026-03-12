@@ -119,7 +119,7 @@ export default function BrokersPage() {
 
             {/* Disclaimer */}
             <div className="glass rounded-xl p-4 text-xs text-white/35 leading-relaxed">
-                ⚠️ <strong className="text-white/50">Disclaimer:</strong> Broker reviews are provided for educational purposes only. PipForge may earn affiliate commissions from broker links. Always conduct your own due diligence before opening an account. Trading involves significant risk of loss.
+                ⚠️ <strong className="text-white/50">Disclaimer:</strong> Broker reviews are provided for educational purposes only. Pipsology may earn affiliate commissions from broker links. Always conduct your own due diligence before opening an account. Trading involves significant risk of loss.
             </div>
         </div>
     );

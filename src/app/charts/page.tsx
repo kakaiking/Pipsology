@@ -47,7 +47,7 @@ export default function ChartsPage() {
                     <span>Practice Arena</span>
                 </div>
                 <h1 className="text-4xl font-bold font-display mb-2">Chart <span className="text-gradient">Classroom</span></h1>
-                <p className="text-white/50">Live charts, pattern quizzes, and drawing tools — all in one place. Practice reading charts without leaving PipForge.</p>
+                <p className="text-white/50">Live charts, pattern quizzes, and drawing tools — all in one place. Practice reading charts without leaving Pipsology.</p>
             </div>
 
             <div className="grid lg:grid-cols-4 gap-5">
@@ -158,10 +158,10 @@ export default function ChartsPage() {
                                     key={p.name}
                                     onClick={() => { setActiveQuiz(quizPatterns.indexOf(p)); setQuizAnswered(p.name); }}
                                     className={`flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm transition-all ${quizAnswered === p.name
-                                            ? p.name === "Bull Flag"
-                                                ? "bg-green-500/20 border border-green-500/30 text-green-400"
-                                                : "bg-red-500/10 border border-red-500/20 text-red-400"
-                                            : "glass hover:bg-white/5 text-white/70"
+                                        ? p.name === "Bull Flag"
+                                            ? "bg-green-500/20 border border-green-500/30 text-green-400"
+                                            : "bg-red-500/10 border border-red-500/20 text-red-400"
+                                        : "glass hover:bg-white/5 text-white/70"
                                         }`}
                                 >
                                     <span className="text-xl shrink-0">{p.emoji}</span>

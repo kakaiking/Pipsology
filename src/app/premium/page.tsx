@@ -82,7 +82,7 @@ export default function PremiumPage() {
             <div className="text-center mb-12">
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-sm font-medium mb-5">
                     <Crown size={13} />
-                    PipForge Premium
+                    Pipsology Premium
                 </div>
                 <h1 className="text-4xl md:text-5xl font-bold font-display mb-4">
                     Trade Better. <span className="text-gradient-gold">Earn More.</span>

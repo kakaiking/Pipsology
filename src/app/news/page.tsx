@@ -39,7 +39,7 @@ export default function NewsPage() {
                         <span>Market Intelligence</span>
                     </div>
                     <h1 className="text-4xl font-bold font-display mb-2">Market <span className="text-gradient">News</span></h1>
-                    <p className="text-white/50">Daily forex & crypto coverage from the PipForge editorial team.</p>
+                    <p className="text-white/50">Daily forex & crypto coverage from the Pipsology editorial team.</p>
                 </div>
                 <div className="flex items-center gap-1.5 glass-brand px-3 py-1.5 rounded-full text-xs text-green-400">
                     <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
