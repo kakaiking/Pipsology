@@ -3,11 +3,25 @@ import { CheckCircle, Play, BookOpen, ChevronLeft, ChevronRight, Star, Lock } fr
 import { courseGrades, preschoolLessons } from "@/lib/data";
 
 export function generateStaticParams() {
-    // For now, we only have data for preschool
-    return preschoolLessons.map((lesson) => ({
-        grade: "preschool",
-        slug: lesson.slug,
-    }));
+    const params: { grade: string; slug: string }[] = [];
+
+    courseGrades.forEach((grade) => {
+        // Use real lessons for preschool, or generate placeholder slugs for others
+        const lessons = grade.id === "preschool"
+            ? preschoolLessons
+            : Array.from({ length: grade.lessons || 0 }).map((_, i) => ({
+                slug: `lesson-${i + 1}`
+            }));
+
+        lessons.forEach((lesson) => {
+            params.push({
+                grade: grade.id,
+                slug: lesson.slug,
+            });
+        });
+    });
+
+    return params;
 }
 
 const lessonContent = `
@@ -57,7 +71,7 @@ export default async function LessonPage({ params }: { params: Promise<{ grade: 
     const currentGrade = courseGrades.find(g => g.id === grade);
 
     return (
-        <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="pb-8">
             <div className="flex gap-6">
                 {/* Sidebar */}
                 <aside className="hidden lg:block w-64 shrink-0">
@@ -134,12 +148,22 @@ export default async function LessonPage({ params }: { params: Promise<{ grade: 
                                     return (
                                         <div key={i} className="overflow-x-auto">
                                             <table className="w-full text-sm border-collapse">
-                                                {rows.map((row, ri) => {
-                                                    const cells = row.split("|").filter(Boolean).map(c => c.trim());
-                                                    return ri === 0
-                                                        ? <tr key={ri} className="border-b border-white/10">{cells.map((c, ci) => <th key={ci} className="text-left py-2 pr-4 text-white/50 font-medium text-xs uppercase tracking-wider">{c}</th>)}</tr>
-                                                        : <tr key={ri} className="border-b border-white/5">{cells.map((c, ci) => <td key={ci} className={`py-2.5 pr-4 text-sm ${ci === 0 ? "text-white/80 font-semibold" : "text-white/55"}`} dangerouslySetInnerHTML={{ __html: c.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") }} />)}</tr>;
-                                                })}
+                                                <thead>
+                                                    {rows.slice(0, 1).map((row, ri) => {
+                                                        const cells = row.split("|").filter(Boolean).map(c => c.trim());
+                                                        return <tr key={ri} className="border-b border-white/10">
+                                                            {cells.map((c, ci) => <th key={ci} className="text-left py-2 pr-4 text-white/50 font-medium text-xs uppercase tracking-wider">{c}</th>)}
+                                                        </tr>;
+                                                    })}
+                                                </thead>
+                                                <tbody>
+                                                    {rows.slice(1).map((row, ri) => {
+                                                        const cells = row.split("|").filter(Boolean).map(c => c.trim());
+                                                        return <tr key={ri} className="border-b border-white/5">
+                                                            {cells.map((c, ci) => <td key={ci} className={`py-2.5 pr-4 text-sm ${ci === 0 ? "text-white/80 font-semibold" : "text-white/55"}`} dangerouslySetInnerHTML={{ __html: c.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>") }} />)}
+                                                        </tr>;
+                                                    })}
+                                                </tbody>
                                             </table>
                                         </div>
                                     );

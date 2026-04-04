@@ -3,8 +3,8 @@ import { TrendingUp, Twitter, Youtube, Github, Heart } from "lucide-react";
 
 const footerLinks = {
     Learn: [
-        { label: "School of Pipsology", href: "/learn" },
-        { label: "School of Crypto", href: "/crypto" },
+        { label: "Pipsology", href: "/learn" },
+        { label: "Crypto", href: "/crypto" },
         { label: "Learning Paths", href: "/paths" },
         { label: "Quizzes", href: "/quizzes" },
         { label: "Forexpedia", href: "/forexpedia" },

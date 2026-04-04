@@ -23,11 +23,11 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-    title: "Pipsology — Master Forex Trading",
+    title: "Pipsology — New to forex?",
     description: "The ultimate forex & crypto trading education platform. Learn, practice, analyze, and grow with AI-powered tools.",
     keywords: ["forex trading", "learn forex", "trading education", "cryptocurrency", "trading journal"],
     openGraph: {
-        title: "Pipsology — Master Forex Trading",
+        title: "Pipsology — New to forex?",
         description: "The ultimate forex & crypto trading education platform.",
         type: "website",
     },
@@ -35,10 +35,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
-        <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}>
+        <html lang="en" className={`scroll-smooth ${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}>
             <body className="bg-[#0a0f0d] text-[#e8f5ef] antialiased">
                 <Navbar />
-                <main className="min-h-screen">{children}</main>
+                <main className="min-h-screen pt-16">{children}</main>
                 <Footer />
             </body>
         </html>

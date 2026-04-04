@@ -28,13 +28,9 @@ export const courseGrades = [
     { id: "preschool", title: "Preschool", subtitle: "Complete beginner? Start here.", lessons: 6, free: true, progress: 100, color: "#22c55e" },
     { id: "kindergarten", title: "Kindergarten", subtitle: "Brokers, analysis types & chart basics.", lessons: 3, free: true, progress: 100, color: "#22c55e" },
     { id: "elementary", title: "Elementary", subtitle: "Core technical analysis fundamentals.", lessons: 5, free: true, progress: 60, color: "#4ade80" },
-    { id: "middle-school", title: "Middle School", subtitle: "Oscillators, patterns & pivot points.", lessons: 3, free: true, progress: 0, color: "#86efac" },
-    { id: "summer-school", title: "Summer School", subtitle: "Heikin Ashi, Elliott Wave, Harmonics.", lessons: 3, free: true, progress: 0, color: "#86efac" },
-    { id: "high-school", title: "High School", subtitle: "Divergences, breakouts & multi-TF.", lessons: 4, free: false, progress: 0, color: "#f59e0b" },
-    { id: "freshman", title: "Undergraduate — Freshman", subtitle: "Fundamental analysis & market sentiment.", lessons: 5, free: false, progress: 0, color: "#f59e0b" },
-    { id: "sophomore", title: "Undergraduate — Sophomore", subtitle: "Building your trading plan.", lessons: 4, free: false, progress: 0, color: "#f59e0b" },
-    { id: "junior", title: "Undergraduate — Junior", subtitle: "Advanced strategy & execution.", lessons: 4, free: false, progress: 0, color: "#f59e0b" },
-    { id: "senior", title: "Undergraduate — Senior", subtitle: "Risk management mastery.", lessons: 5, free: false, progress: 0, color: "#ef4444" },
+    { id: "middle-school", title: "Middle", subtitle: "Oscillators, patterns & pivot points.", lessons: 3, free: true, progress: 0, color: "#86efac" },
+    { id: "summer-school", title: "Summer", subtitle: "Heikin Ashi, Elliott Wave, Harmonics.", lessons: 3, free: true, progress: 0, color: "#86efac" },
+    { id: "high-school", title: "High", subtitle: "Divergences, breakouts & multi-TF.", lessons: 4, free: false, progress: 0, color: "#f59e0b" },
     { id: "graduation", title: "Graduation", subtitle: "Psychology, going live & real trading.", lessons: 3, free: false, progress: 0, color: "#8b5cf6" },
 ];
 

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -12,8 +12,8 @@ const navItems = [
         label: "Learn",
         icon: BookOpen,
         children: [
-            { label: "School of Pipsology", href: "/learn", desc: "Complete forex curriculum" },
-            { label: "School of Crypto", href: "/crypto", desc: "Blockchain & crypto guide" },
+            { label: "Pipsology", href: "/learn", desc: "Complete forex curriculum" },
+            { label: "Crypto", href: "/crypto", desc: "Blockchain & crypto guide" },
             { label: "Learning Paths", href: "/paths", desc: "Personalized curriculum" },
             { label: "Quizzes", href: "/quizzes", desc: "Test your knowledge" },
             { label: "Psychology Hub", href: "/psychology", desc: "Master your trading mind" },
@@ -62,142 +62,207 @@ export function Navbar() {
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const pathname = usePathname();
 
+    const [visible, setVisible] = useState(true);
+    const prevScrollPos = useRef(0);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            const currentScrollPos = window.scrollY;
+
+            // Show navbar if scrolling up, at the very top, or if mobile menu is open
+            if (prevScrollPos.current > currentScrollPos || currentScrollPos < 10 || open) {
+                setVisible(true);
+            } else {
+                // Hide navbar if scrolling down and not at the top
+                setVisible(false);
+            }
+            prevScrollPos.current = currentScrollPos;
+        };
+
+        const handleForceHide = () => {
+            setVisible(false);
+        };
+
+        window.addEventListener("scroll", handleScroll);
+        window.addEventListener("hide-navbar", handleForceHide);
+
+        return () => {
+            window.removeEventListener("scroll", handleScroll);
+            window.removeEventListener("hide-navbar", handleForceHide);
+        };
+    }, [open]);
+
+    useEffect(() => {
+        if (open) setVisible(true);
+    }, [open]);
+
+    // Demo auth state (temporary): null = signed out, { name } = signed in
+    const [user, setUser] = useState<{ name: string } | null>(null);
+    const [avatarOpen, setAvatarOpen] = useState(false);
+
+    function handleSignIn(e: any) {
+        e?.preventDefault?.();
+        const name = window.prompt("Enter name for demo sign-in", "Alex");
+        if (name && name.trim()) {
+            setUser({ name: name.trim() });
+        }
+    }
+
+    const initial = user?.name?.trim()?.[0]?.toUpperCase() ?? "U";
+
     return (
-        <nav className="fixed top-0 left-0 right-0 z-[100] bg-[#0a0f0d]/80 backdrop-blur-xl border-b border-white/5">
-            <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
-                {/* Logo */}
-                <Link href="/" className="flex items-center gap-2 group">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center shadow-lg glow-green-sm">
-                        <TrendingUp size={16} className="text-white" />
-                    </div>
-                    <span className="font-bold text-lg font-display tracking-tight">
-                        <span className="text-white/90">Pipsology</span>
-                    </span>
-                </Link>
+        <>
+            <nav
+                className={`fixed top-0 left-0 right-0 z-[100] bg-[#0a0f0d]/80 backdrop-blur-xl border-b border-white/5 transition-transform duration-300 ${visible ? "translate-y-0" : "-translate-y-full"
+                    }`}
+            >
+                <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
+                    {/* Logo */}
+                    <Link href="/" className="flex items-center gap-2 group">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center shadow-lg glow-green-sm">
+                            <TrendingUp size={16} className="text-white" />
+                        </div>
+                        <span className="font-bold text-lg font-display tracking-tight">
+                            <span className="text-white/90">Pipsology</span>
+                        </span>
+                    </Link>
 
-                {/* Desktop Nav */}
-                <div className="hidden md:flex items-center gap-1">
-                    {navItems.map((item) => (
-                        <div
-                            key={item.label}
-                            className="relative"
-                            onMouseEnter={() => item.children && setActiveDropdown(item.label)}
-                            onMouseLeave={() => setActiveDropdown(null)}
-                        >
-                            {item.href ? (
-                                <Link
-                                    href={item.href}
-                                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${pathname === item.href
-                                        ? "text-green-400 bg-green-400/10"
-                                        : "text-white/70 hover:text-white hover:bg-white/5"
-                                        }`}
-                                >
-                                    <item.icon size={15} />
-                                    {item.label}
-                                </Link>
-                            ) : (
+
+
+                    {/* Right side */}
+                    <div className="flex items-center gap-3">
+                        {/* Notifications — always visible */}
+                        <Link href="/alerts" className="hidden sm:flex relative w-9 h-9 items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 transition-all text-white/60 hover:text-white border border-white/5">
+                            <Bell size={18} />
+                            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-[#0a0f0d]" />
+                        </Link>
+
+                        {user ? (
+                            <div className="relative">
                                 <button
-                                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${activeDropdown === item.label
-                                        ? "text-green-400 bg-green-400/10"
-                                        : "text-white/70 hover:text-white hover:bg-white/5"
-                                        }`}
+                                    onClick={() => setAvatarOpen((s) => !s)}
+                                    className="w-9 h-9 rounded-full bg-white/6 flex items-center justify-center text-sm font-bold text-white/90 hover:bg-white/10 transition"
+                                    aria-label="Account menu"
                                 >
-                                    <item.icon size={15} />
-                                    {item.label}
-                                    <ChevronDown size={12} className={`transition-transform ${activeDropdown === item.label ? "rotate-180" : ""}`} />
+                                    {initial}
                                 </button>
-                            )}
 
-                            {/* Dropdown */}
-                            {item.children && activeDropdown === item.label && (
-                                <div className="absolute top-full left-0 pt-2 w-72 z-[110]">
-                                    <div className="glass-dropdown rounded-2xl p-2 shadow-[0_20px_50px_rgba(0,0,0,0.6)] animate-in fade-in slide-in-from-top-2">
-                                        {item.children.map((child) => (
-                                            <Link
-                                                key={child.href}
-                                                href={child.href}
-                                                className="flex flex-col px-3 py-2.5 rounded-lg hover:bg-white/5 transition-all group"
-                                            >
-                                                <span className="text-sm font-medium text-white/90 group-hover:text-green-400 transition-colors">{child.label}</span>
-                                                <span className="text-xs text-white/40 mt-0.5">{child.desc}</span>
-                                            </Link>
-                                        ))}
+                                {avatarOpen && (
+                                    <div className="absolute right-0 mt-2 w-64 z-[110]">
+                                        <div className="bg-[#111714] border border-white/10 rounded-2xl p-3 shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-full bg-white/6 flex items-center justify-center font-bold">{initial}</div>
+                                                    <div>
+                                                        <div className="text-sm font-bold text-white/90">{user.name}</div>
+                                                        <div className="text-xs text-white/40">Member</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="py-2 border-t border-white/5">
+                                                <div className="flex items-center gap-3 px-1 py-2">
+                                                    <span className="text-xl">🔥</span>
+                                                    <div>
+                                                        <div className="text-sm font-bold text-green-400">7</div>
+                                                        <div className="text-xs text-white/40 uppercase tracking-tighter">Day Streak</div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex items-center gap-3 px-1 py-2">
+                                                    <Star size={16} className="text-yellow-400" />
+                                                    <div>
+                                                        <div className="text-sm font-bold text-yellow-400">2,450</div>
+                                                        <div className="text-xs text-white/40">XP</div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="mt-3 grid gap-2">
+                                                    <Link href="/premium" className="py-2 rounded-lg text-sm font-bold text-black bg-gradient-to-r from-yellow-500 to-amber-600 text-center">
+                                                        Pro
+                                                    </Link>
+                                                    <Link href="/account" className="py-2 rounded-lg text-sm glass text-white/80 text-center">
+                                                        Account
+                                                    </Link>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
-                        </div>
-                    ))}
-                </div>
+                                )}
+                            </div>
+                        ) : (
+                            <button
+                                onClick={handleSignIn}
+                                className="flex items-center gap-2 px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider glass hover:bg-white/8 transition-all text-white/90 border border-white/10"
+                            >
+                                <LogIn size={14} className="hidden sm:block" />
+                                <span className="hidden sm:block">Sign In</span>
+                                <span className="sm:hidden text-xs">Login</span>
+                            </button>
+                        )}
 
-                {/* Right side */}
-                <div className="hidden md:flex items-center gap-3">
-                    {/* XP Streak */}
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500/10 border border-green-500/20 rounded-full text-xs">
-                        <span className="flame">🔥</span>
-                        <span className="text-green-400 font-bold">7</span>
-                        <span className="text-white/40 uppercase tracking-tighter">Day Streak</span>
+                        {/* Hamburger button (Always visible, triggering off-canvas) */}
+                        <button onClick={() => setOpen(!open)} className="w-9 h-9 flex items-center justify-center rounded-lg glass text-white/70 hover:text-white hover:bg-white/10 transition-colors">
+                            <Menu size={18} />
+                        </button>
                     </div>
-                    {/* XP */}
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 glass rounded-full text-xs">
-                        <Star size={12} className="text-yellow-400 fill-yellow-400" />
-                        <span className="text-yellow-400 font-bold">2,450</span>
-                        <span className="text-white/40 uppercase tracking-tighter">XP</span>
-                    </div>
-                    {/* Alerts */}
-                    <Link href="/alerts" className="relative w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 transition-all text-white/60 hover:text-white border border-white/5">
-                        <Bell size={18} />
-                        <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-[#0a0f0d]" />
-                    </Link>
-                    {/* Premium */}
-                    <Link
-                        href="/premium"
-                        className="flex items-center gap-2 px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-yellow-500 to-amber-600 text-black hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all hover:scale-105"
-                    >
-                        <Crown size={14} className="fill-black" />
-                        Pro
-                    </Link>
-                    <Link href="/account" className="flex items-center gap-2 px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider glass hover:bg-white/8 transition-all text-white/90 border border-white/10">
-                        <LogIn size={14} />
-                        Sign In
-                    </Link>
                 </div>
+            </nav>
 
-                {/* Mobile hamburger */}
-                <button onClick={() => setOpen(!open)} className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg glass text-white/70">
-                    {open ? <X size={18} /> : <Menu size={18} />}
-                </button>
-            </div>
-
-            {/* Mobile menu */}
+            {/* Offcanvas menu */}
             {open && (
-                <div className="md:hidden border-t border-white/5 bg-[#0a0f0d] px-4 py-4 space-y-1">
-                    {navItems.map((item) => (
-                        <div key={item.label}>
-                            {item.href ? (
-                                <Link href={item.href} onClick={() => setOpen(false)} className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-white/70 hover:text-white hover:bg-white/5">
-                                    <item.icon size={15} />
-                                    {item.label}
-                                </Link>
-                            ) : (
-                                <>
-                                    <div className="flex items-center gap-2 px-3 py-2 text-xs font-semibold uppercase tracking-widest text-white/30 mt-2">
-                                        <item.icon size={12} />{item.label}
-                                    </div>
-                                    {item.children?.map((c) => (
-                                        <Link key={c.href} href={c.href} onClick={() => setOpen(false)} className="block px-6 py-2 rounded-lg text-sm text-white/60 hover:text-white hover:bg-white/5">
-                                            {c.label}
-                                        </Link>
-                                    ))}
-                                </>
-                            )}
+                <>
+                    <div
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[200] animate-in fade-in transition-all"
+                        onClick={() => setOpen(false)}
+                    />
+                    <div className="fixed top-0 right-0 h-full w-80 bg-[#0a0f0d] border-l border-white/10 z-[210] p-6 overflow-y-auto animate-in slide-in-from-right shadow-2xl">
+                        <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/10">
+                            <span className="font-bold text-lg font-display text-white/90 tracking-tight">Navigation</span>
+                            <button onClick={() => setOpen(false)} className="w-9 h-9 flex items-center justify-center rounded-lg glass text-white/70 hover:text-white transition-colors">
+                                <X size={18} />
+                            </button>
                         </div>
-                    ))}
-                    <div className="pt-3 flex gap-2">
-                        <Link href="/premium" className="flex-1 text-center py-2.5 rounded-lg text-sm font-semibold bg-gradient-to-r from-yellow-500 to-amber-500 text-black">Premium</Link>
-                        <Link href="/account" className="flex-1 text-center py-2.5 rounded-lg text-sm font-medium glass text-white/80">Sign In</Link>
+
+                        <div className="space-y-6 pb-20">
+                            {navItems.map((item) => (
+                                <div key={item.label} className="space-y-3">
+                                    {item.href ? (
+                                        <Link href={item.href} onClick={() => setOpen(false)} className="flex items-center gap-3 text-base font-semibold text-white/90 hover:text-green-400 transition-colors bg-white/5 p-3 rounded-xl border border-white/5">
+                                            <item.icon size={18} className="text-green-400" />
+                                            {item.label}
+                                        </Link>
+                                    ) : (
+                                        <div className="bg-white/[0.02] border border-white/5 rounded-xl overflow-hidden transition-all">
+                                            <button
+                                                onClick={() => setActiveDropdown(activeDropdown === item.label ? null : item.label)}
+                                                className="w-full flex items-center justify-between p-4 text-left hover:bg-white/5 transition-colors"
+                                            >
+                                                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-white/40">
+                                                    <item.icon size={14} />
+                                                    {item.label}
+                                                </div>
+                                                <ChevronDown size={14} className={`text-white/40 transition-transform ${activeDropdown === item.label ? "rotate-180" : ""}`} />
+                                            </button>
+
+                                            {activeDropdown === item.label && (
+                                                <div className="flex flex-col gap-1 px-4 pb-4 animate-in slide-in-from-top-2 fade-in duration-200">
+                                                    {item.children?.map((c) => (
+                                                        <Link key={c.href} href={c.href} onClick={() => setOpen(false)} className="text-sm font-medium text-white/70 hover:text-green-400 py-2 px-3 rounded-lg hover:bg-white/5 transition-colors">
+                                                            {c.label}
+                                                        </Link>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                </div>
-            )}
-        </nav>
+                </>
+            )
+            }
+        </>
     );
 }
