@@ -17,19 +17,13 @@ const generateCandles = (n = 80, start = 1.0820) => {
 
 const pairs = ["EUR/USD", "GBP/USD", "USD/JPY", "GBP/JPY", "AUD/USD", "BTC/USD"];
 
-const quizPatterns = [
-    { name: "Double Top", emoji: "🏔", hint: "Two peaks at the same level — bearish reversal signal" },
-    { name: "Head and Shoulders", emoji: "👤", hint: "Three peaks, middle is highest — strong bearish reversal" },
-    { name: "Bull Flag", emoji: "🚩", hint: "Tight consolidation after sharp rally — bullish continuation" },
-    { name: "Descending Triangle", emoji: "📐", hint: "Lower highs with flat support — bearish breakout" },
-];
+
 
 export default function ChartsPage() {
     const [candles] = useState(() => generateCandles());
     const [selectedPair, setSelectedPair] = useState("EUR/USD");
     const [selectedTf, setSelectedTf] = useState("H1");
     const [activeQuiz, setActiveQuiz] = useState<number | null>(null);
-    const [quizAnswered, setQuizAnswered] = useState<string | null>(null);
     const [drawingMode, setDrawingMode] = useState<string | null>(null);
 
     const prices = candles.flatMap(c => [c.high, c.low]);
@@ -47,7 +41,7 @@ export default function ChartsPage() {
                     <span>Practice Arena</span>
                 </div>
                 <h1 className="text-4xl font-bold font-display mb-2">Chart <span className="text-gradient">Classroom</span></h1>
-                <p className="text-white/50">Live charts, pattern quizzes, and drawing tools — all in one place. Practice reading charts without leaving Pipsology.</p>
+                <p className="text-white/50">Live charts and drawing tools — all in one place. Practice reading charts without leaving Tradey Markets.</p>
             </div>
 
             <div className="grid lg:grid-cols-4 gap-5">
@@ -144,40 +138,7 @@ export default function ChartsPage() {
                         </div>
                     </div>
 
-                    {/* Pattern Quiz */}
-                    <div className="glass rounded-2xl p-5">
-                        <div className="flex items-center gap-2 mb-4">
-                            <Target size={15} className="text-yellow-400" />
-                            <h3 className="font-semibold text-sm">Pattern Recognition Quiz</h3>
-                            <div className="ml-auto text-xs text-white/30">+50 XP per correct answer</div>
-                        </div>
-                        <p className="text-xs text-white/50 mb-4">Study the chart above and identify which pattern you see. Build your chart reading instinct!</p>
-                        <div className="grid sm:grid-cols-2 gap-2">
-                            {quizPatterns.map((p) => (
-                                <button
-                                    key={p.name}
-                                    onClick={() => { setActiveQuiz(quizPatterns.indexOf(p)); setQuizAnswered(p.name); }}
-                                    className={`flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm transition-all ${quizAnswered === p.name
-                                        ? p.name === "Bull Flag"
-                                            ? "bg-green-500/20 border border-green-500/30 text-green-400"
-                                            : "bg-red-500/10 border border-red-500/20 text-red-400"
-                                        : "glass hover:bg-white/5 text-white/70"
-                                        }`}
-                                >
-                                    <span className="text-xl shrink-0">{p.emoji}</span>
-                                    <div>
-                                        <div className="font-medium">{p.name}</div>
-                                        {quizAnswered && <div className="text-xs opacity-60 mt-0.5">{p.hint}</div>}
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                        {quizAnswered && (
-                            <div className={`mt-4 p-3 rounded-xl text-sm ${quizAnswered === "Bull Flag" ? "glass-brand text-green-400" : "bg-red-500/10 text-red-400"}`}>
-                                {quizAnswered === "Bull Flag" ? "🎉 Correct! The chart shows a Bull Flag continuation pattern. You earn +50 XP!" : "❌ Not quite. The pattern on the chart is a Bull Flag. Study the tight consolidation after the sharp rally."}
-                            </div>
-                        )}
-                    </div>
+
                 </div>
 
                 {/* Sidebar */}
@@ -228,3 +189,5 @@ export default function ChartsPage() {
         </div>
     );
 }
+
+

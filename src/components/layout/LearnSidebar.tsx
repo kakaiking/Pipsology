@@ -3,8 +3,8 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen } from "lucide-react";
-import { courseGrades } from "@/lib/data";
+import { ChevronLeft, ChevronRight, PanelLeftClose, PanelLeftOpen, PlayCircle } from "lucide-react";
+import { courseGrades, tradingVideos } from "@/lib/data";
 
 export function LearnSidebar({ isCollapsed, onToggle }: { isCollapsed: boolean; onToggle: () => void }) {
     const pathname = usePathname();
@@ -65,6 +65,28 @@ export function LearnSidebar({ isCollapsed, onToggle }: { isCollapsed: boolean; 
                             </Link>
                         );
                     })}
+
+                    <div className="mt-2 mb-6">
+                        <Link
+                            href="/learn/videos"
+                            className={`flex items-center ${isCollapsed ? "justify-center p-1" : "gap-4 p-3"} rounded-xl transition-all group ${pathname === '/learn/videos'
+                                ? "bg-green-500/10 text-green-400"
+                                : "text-white/60 hover:bg-white/5 hover:text-white"
+                                }`}
+                        >
+                            <div className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center border-2 transition-all ${pathname === '/learn/videos'
+                                ? "border-green-400 bg-green-500/20 text-green-400"
+                                : "border-white/10 bg-white/5 text-white/40 group-hover:border-white/20"
+                                }`}>
+                                <PlayCircle size={18} />
+                            </div>
+                            {!isCollapsed && (
+                                <div className="flex-1 min-w-0">
+                                    <span className="font-semibold truncate">Videos</span>
+                                </div>
+                            )}
+                        </Link>
+                    </div>
                 </div>
             </div>
 
@@ -72,3 +94,5 @@ export function LearnSidebar({ isCollapsed, onToggle }: { isCollapsed: boolean; 
         </aside>
     );
 }
+
+

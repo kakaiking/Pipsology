@@ -2,15 +2,14 @@
 
 import Link from "next/link";
 import { ChevronRight, CheckCircle } from "lucide-react";
-import { courseGrades, preschoolLessons } from "@/lib/data";
+import { courseGrades, curricula } from "@/lib/data";
 
 type Props = { gradeId: string };
 
 export default function LevelDetailPanel({ gradeId }: Props) {
   const grade = courseGrades.find(g => g.id === gradeId) || courseGrades[0];
 
-  // For this prototype, only preschool has a detailed list in data
-  const lessons = gradeId === "preschool" ? preschoolLessons : Array.from({ length: grade.lessons || 0 }).map((_, i) => ({ id: i + 1, slug: `lesson-${i + 1}`, title: `${grade.title} Lesson ${i + 1}`, done: false }));
+  const lessons = curricula[gradeId] || [];
 
   return (
     <div className="pb-6">
@@ -46,3 +45,5 @@ export default function LevelDetailPanel({ gradeId }: Props) {
     </div>
   );
 }
+
+

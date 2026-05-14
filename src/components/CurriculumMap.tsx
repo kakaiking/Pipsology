@@ -13,20 +13,16 @@ const NODES = [
     { x: 148, y: 62 }, // Preschool
     { x: 362, y: 132 }, // Kindergarten
     { x: 618, y: 160 }, // Elementary
-    { x: 788, y: 248 }, // Middle School
-    { x: 600, y: 350 }, // Summer School
-    { x: 362, y: 385 }, // High School
-    { x: 112, y: 428 }, // Graduation
 ];
 
 // Full trail (top-left → bottom-left, reversed from before)
-const TRAIL = 'M 148,62 C 180,84 258,124 362,132 C 448,138 498,160 618,160 C 822,162 830,214 788,248 C 745,292 676,336 600,350 C 528,365 448,378 362,385 C 280,392 200,430 112,428';
+const TRAIL = 'M 148,62 C 180,84 258,124 362,132 C 448,138 498,160 618,160';
 
 // Green completed trail: Preschool → Kindergarten → (into) Elementary
 const TRAIL_DONE = 'M 148,62 C 180,84 258,124 362,132 C 448,138 498,160 618,160';
 
 // Label above/below each node: top nodes (small y) → label BELOW; bottom nodes → label ABOVE
-const LABEL_ABOVE = [false, false, false, false, true, true, true];
+const LABEL_ABOVE = [false, false, false];
 const R = 34; // node radius
 
 // ── Decorative candlestick data ───────────────────────────────────────────────
@@ -84,8 +80,8 @@ function getHref(g: typeof courseGrades[0]): string {
     return `/learn/${g.id}`;
 }
 
-const ICONS = ['📗', '📘', '📙', '📕', '☀️', '🎓', '🏆'];
-const LABELS = ['Preschool', 'Kindergarten', 'Elementary', 'Middle School', 'Summer School', 'High School', 'Graduation'];
+const ICONS = ['📗', '📘', '📙'];
+const LABELS = ['Beginner', 'Novice', 'Intermediate'];
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function CurriculumMap() {
@@ -204,7 +200,7 @@ export default function CurriculumMap() {
                         const state = getState(grade, idx);
                         const above = LABEL_ABOVE[idx];
                         const isHov = hovered === grade.id;
-                        const isLast = idx === 6;
+                        const isLast = idx === 2;
 
                         // ── visual config per state
                         const fill = state === 'completed' ? 'url(#g-done)'
@@ -323,3 +319,5 @@ export default function CurriculumMap() {
         </section>
     );
 }
+
+

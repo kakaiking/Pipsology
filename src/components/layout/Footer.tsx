@@ -1,15 +1,18 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { TrendingUp, Twitter, Youtube, Github, Heart } from "lucide-react";
 
 const footerLinks = {
     Learn: [
-        { label: "Pipsology", href: "/learn" },
-        { label: "Crypto", href: "/crypto" },
+        { label: "Tradey Markets", href: "/learn" },
+        // { label: "Crypto", href: "/crypto" },
         { label: "Learning Paths", href: "/paths" },
-        { label: "Quizzes", href: "/quizzes" },
         { label: "Forexpedia", href: "/forexpedia" },
-        { label: "Psychology Hub", href: "/psychology" },
+        // { label: "Psychology Hub", href: "/psychology" },
     ],
+    /*
     Markets: [
         { label: "Market News", href: "/news" },
         { label: "Trading Insights", href: "/trading" },
@@ -26,17 +29,25 @@ const footerLinks = {
         { label: "Chart Classroom", href: "/charts" },
         { label: "Price Alerts", href: "/alerts" },
     ],
+    */
     Company: [
-        { label: "About Pipsology", href: "/about" },
-        { label: "Premium", href: "/premium" },
-        { label: "Broker Reviews", href: "/brokers" },
-        { label: "Forum", href: "/forum" },
+        { label: "About Tradey Markets", href: "/about" },
+        // { label: "Premium", href: "/premium" },
+        // { label: "Broker Reviews", href: "/brokers" },
+        // { label: "Forum", href: "/forum" },
         { label: "Privacy Policy", href: "/privacy" },
         { label: "Terms of Service", href: "/terms" },
     ],
 };
 
 export function Footer() {
+    const pathname = usePathname();
+
+    // Hide footer on learn pages as they have their own sidebar and layout
+    if (pathname?.startsWith("/learn") || pathname?.startsWith("/admin")) {
+        return null;
+    }
+
     return (
         <footer className="border-t border-white/5 bg-[#080d0b] mt-20">
             <div className="max-w-7xl mx-auto px-4 py-16">
@@ -48,7 +59,7 @@ export function Footer() {
                                 <TrendingUp size={20} className="text-white" />
                             </div>
                             <span className="font-bold text-2xl font-display tracking-tight">
-                                <span className="text-white/90">Pipsology</span>
+                                <span className="text-white/90">Tradey Markets</span>
                             </span>
                         </Link>
                         <p className="text-white/40 text-sm leading-relaxed mb-6 max-w-sm font-medium">
@@ -82,7 +93,7 @@ export function Footer() {
 
                 <div className="border-t border-white/5 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
                     <p className="text-xs text-white/30">
-                        © 2026 Pipsology. Not financial advice. Trading involves significant risk.
+                        © 2026 Tradey Markets. Not financial advice. Trading involves significant risk.
                     </p>
                     <p className="text-xs text-white/20 flex items-center gap-1">
                         Made with <Heart size={10} className="text-red-400" /> for traders worldwide
@@ -92,3 +103,5 @@ export function Footer() {
         </footer>
     );
 }
+
+

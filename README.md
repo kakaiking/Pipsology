@@ -1,10 +1,10 @@
-# Pipsology 💱
+# Tradey Markets 💱
 
-A premium Forex education platform built with Next.js 15, React 19, and Tailwind CSS. Pipsology provides a comprehensive curriculum from beginner (Preschool) to professional (Graduation), complete with interactive quizzes, market analysis tools, and a community focus.
+A premium Forex education platform built with Next.js 15, React 19, and Tailwind CSS. Tradey Markets provides a comprehensive curriculum from beginner (Preschool) to professional (Graduation), complete with interactive quizzes, market analysis tools, and a community focus.
 
 ## ✨ Features
 
-- **School of Pipsology**: 11 levels of education with structured lessons.
+- **School of Tradey Markets**: 11 levels of education with structured lessons.
 - **Interactive Quizzes**: Test your knowledge after every module.
 - **Forexpedia**: Comprehensive reference library for trading terms.
 - **MarketVision™**: Real-time market analysis and event guides (Mockup).
@@ -32,8 +32,8 @@ A premium Forex education platform built with Next.js 15, React 19, and Tailwind
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/kakaiking/Pipsology.git
-   cd Pipsology
+   git clone https://github.com/kakaiking/Tradey Markets.git
+   cd TradeyMarkets
    ```
 
 2. Install dependencies:
@@ -46,7 +46,7 @@ A premium Forex education platform built with Next.js 15, React 19, and Tailwind
    npm run dev
    ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000/TradeyMarkets/](http://localhost:3000/TradeyMarkets/) with your browser to see the result.
 
 ## 📦 Deployment
 
@@ -77,4 +77,4 @@ The repository includes a GitHub Action in `.github/workflows/deploy.yml` that a
 
 ---
 
-Built with ❤️ by Pipsology Team.
+Built with ❤️ by Tradey Markets Team.

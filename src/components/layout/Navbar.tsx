@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -12,48 +12,28 @@ const navItems = [
         label: "Learn",
         icon: BookOpen,
         children: [
-            { label: "Pipsology", href: "/learn", desc: "Complete forex curriculum" },
-            { label: "Crypto", href: "/crypto", desc: "Blockchain & crypto guide" },
+            { label: "Tradey Markets", href: "/learn", desc: "Complete forex curriculum" },
             { label: "Learning Paths", href: "/paths", desc: "Personalized curriculum" },
-            { label: "Quizzes", href: "/quizzes", desc: "Test your knowledge" },
-            { label: "Psychology Hub", href: "/psychology", desc: "Master your trading mind" },
-        ],
-    },
-    {
-        label: "Markets",
-        icon: TrendingUp,
-        children: [
-            { label: "Market News", href: "/news", desc: "Breaking forex & crypto news" },
-            { label: "Trading Insights", href: "/trading", desc: "Chart art & trade ideas" },
-            { label: "Analysis", href: "/analysis", desc: "Deep market research" },
-            { label: "Economic Calendar", href: "/calendar", desc: "High-impact events" },
+            { label: "Forexpedia", href: "/forexpedia", desc: "Trading glossary" },
         ],
     },
     {
         label: "Tools",
         icon: Wrench,
         children: [
-            { label: "All Tools", href: "/tools", desc: "7 essential calculators" },
-            { label: "MarketVision™", href: "/marketvision", desc: "Visual analytics dashboard" },
-            { label: "Strategy Backtester", href: "/backtester", desc: "Test on historical data" },
-            { label: "Chart Classroom", href: "/charts", desc: "Interactive live charts" },
+            { label: "Calendar", href: "/calendar", desc: "Economic & community events" },
+            { label: "Live Charts", href: "/charts", desc: "Real-time market analysis" },
+            { label: "News Feed", href: "/news", desc: "Latest market updates" },
+            { label: "Webinars", href: "/webinars", desc: "Live education sessions" },
         ],
     },
     {
         label: "Community",
         icon: Users,
         children: [
-            { label: "Social Feed", href: "/social", desc: "Trade ideas & setups" },
-            { label: "Forum", href: "/forum", desc: "Discussions & journals" },
-            { label: "Webinars", href: "/webinars", desc: "Live market analysis" },
-            { label: "Broker Reviews", href: "/brokers", desc: "Find the right broker" },
+            { label: "Social Feed", href: "/social", desc: "Connect with other traders" },
+            { label: "About Us", href: "/about", desc: "Our mission & team" },
         ],
-    },
-    {
-        label: "Journal",
-        icon: BarChart3,
-        href: "/journal",
-        children: null,
     },
 ];
 
@@ -61,40 +41,6 @@ export function Navbar() {
     const [open, setOpen] = useState(false);
     const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
     const pathname = usePathname();
-
-    const [visible, setVisible] = useState(true);
-    const prevScrollPos = useRef(0);
-
-    useEffect(() => {
-        const handleScroll = () => {
-            const currentScrollPos = window.scrollY;
-
-            // Show navbar if scrolling up, at the very top, or if mobile menu is open
-            if (prevScrollPos.current > currentScrollPos || currentScrollPos < 10 || open) {
-                setVisible(true);
-            } else {
-                // Hide navbar if scrolling down and not at the top
-                setVisible(false);
-            }
-            prevScrollPos.current = currentScrollPos;
-        };
-
-        const handleForceHide = () => {
-            setVisible(false);
-        };
-
-        window.addEventListener("scroll", handleScroll);
-        window.addEventListener("hide-navbar", handleForceHide);
-
-        return () => {
-            window.removeEventListener("scroll", handleScroll);
-            window.removeEventListener("hide-navbar", handleForceHide);
-        };
-    }, [open]);
-
-    useEffect(() => {
-        if (open) setVisible(true);
-    }, [open]);
 
     // Demo auth state (temporary): null = signed out, { name } = signed in
     const [user, setUser] = useState<{ name: string } | null>(null);
@@ -110,11 +56,14 @@ export function Navbar() {
 
     const initial = user?.name?.trim()?.[0]?.toUpperCase() ?? "U";
 
+    if (pathname?.startsWith("/admin")) {
+        return null;
+    }
+
     return (
         <>
             <nav
-                className={`fixed top-0 left-0 right-0 z-[100] bg-[#0a0f0d]/80 backdrop-blur-xl border-b border-white/5 transition-transform duration-300 ${visible ? "translate-y-0" : "-translate-y-full"
-                    }`}
+                className="fixed top-0 left-0 right-0 z-[100] bg-[#0a0f0d]/80 backdrop-blur-xl border-b border-white/5"
             >
                 <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
                     {/* Logo */}
@@ -123,7 +72,7 @@ export function Navbar() {
                             <TrendingUp size={16} className="text-white" />
                         </div>
                         <span className="font-bold text-lg font-display tracking-tight">
-                            <span className="text-white/90">Pipsology</span>
+                            <span className="text-white/90">Tradey Markets</span>
                         </span>
                     </Link>
 
@@ -266,3 +215,5 @@ export function Navbar() {
         </>
     );
 }
+
+

@@ -9,7 +9,7 @@ start "Next Dev" cmd /k "npm run dev"
 
 REM Give the server a moment to start, then open the app in the default browser
 timeout /t 3 /nobreak >nul
-start "" "http://localhost:3000"
+start "" "http://localhost:3001/TradeyMarkets/"
 
 popd
 exit /b 0

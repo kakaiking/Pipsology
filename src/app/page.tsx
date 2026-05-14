@@ -27,16 +27,15 @@ export default function HomePage() {
                             <BookOpen size={18} />
                             Start Learning
                         </Link>
-                        <Link href="/paths" className="inline-flex items-center gap-3 px-6 py-3 rounded-full border border-white/8 text-white/65 font-medium bg-white/3 hover:bg-white/5 transition-colors">
+                        {/* <Link href="/paths" className="inline-flex items-center gap-3 px-6 py-3 rounded-full border border-white/8 text-white/65 font-medium bg-white/3 hover:bg-white/5 transition-colors">
                             Create custom curriculum
-                        </Link>
+                        </Link> */}
                     </div>
                 </div>
 
                 <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 animate-bounce">
                     <button
                         onClick={() => {
-                            window.dispatchEvent(new CustomEvent("hide-navbar"));
                             document.getElementById("curriculum")?.scrollIntoView({ behavior: "smooth" });
                         }}
                         className="flex items-center justify-center text-white/40 hover:text-green-400 transition-all cursor-pointer bg-transparent border-none"
@@ -54,3 +53,5 @@ export default function HomePage() {
         </div>
     );
 }
+
+

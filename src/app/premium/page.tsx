@@ -8,12 +8,11 @@ const plans = [
         period: "forever",
         highlight: false,
         features: [
-            "Preschool through Summer School (5 levels)",
+            "Beginner through Expert (5 levels)",
             "Full Forexpedia glossary",
             "Economic Calendar",
             "All 7 trading calculators",
             "Social Trade Feed (read-only)",
-            "Basic quiz access",
             "Community forum participation",
             "3 journal entries per month",
         ],
@@ -29,7 +28,7 @@ const plans = [
         highlight: true,
         features: [
             "Everything in Free",
-            "High School through Graduation (6 levels)",
+            "Master through Professional (6 levels)",
             "AI Trade Journal — unlimited entries + AI insights",
             "Strategy Backtester — full historical data",
             "Event Trading Guides",
@@ -67,7 +66,7 @@ const plans = [
 ];
 
 const premiumFeatures = [
-    { emoji: "📚", title: "Full 11-Level Curriculum", desc: "Access High School through Graduation with advanced strategy modules" },
+    { emoji: "📚", title: "Full 11-Level Curriculum", desc: "Access Master through Professional with advanced strategy modules" },
     { emoji: "🤖", title: "AI Trade Journal Insights", desc: "Let AI spot patterns in your trading — session biases, emotional triggers, R:R problems" },
     { emoji: "📊", title: "Strategy Backtester", desc: "Full historical data across all major/minor pairs. Test strategies before risking real money" },
     { emoji: "📈", title: "Event Trading Guides", desc: "Color-coded trade setup guides for NFP, FOMC, CPI, and all major events" },
@@ -82,7 +81,7 @@ export default function PremiumPage() {
             <div className="text-center mb-12">
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-sm font-medium mb-5">
                     <Crown size={13} />
-                    Pipsology Premium
+                    Tradey Markets Premium
                 </div>
                 <h1 className="text-4xl md:text-5xl font-bold font-display mb-4">
                     Trade Better. <span className="text-gradient-gold">Earn More.</span>
@@ -178,3 +177,5 @@ export default function PremiumPage() {
         </div>
     );
 }
+
+

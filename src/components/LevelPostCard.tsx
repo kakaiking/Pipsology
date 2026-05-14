@@ -65,3 +65,5 @@ export default function LevelPostCard({ id, title, subtitle, lessons = 0, progre
     </article>
   );
 }
+
+

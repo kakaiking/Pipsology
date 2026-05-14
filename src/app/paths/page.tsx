@@ -89,7 +89,7 @@ export default function PathsPage() {
                         </div>
                         <div className="progress-bar mb-4"><div className="progress-fill" style={{ width: "40%" }} /></div>
                         <div className="flex items-center gap-2 flex-wrap">
-                            {["Preschool ✅", "Elementary ✅", "Chart Patterns →", "Fibonacci", "Risk Management"].map((step, i) => (
+                            {["Beginner ✅", "Intermediate ✅", "Chart Patterns →", "Fibonacci", "Risk Management"].map((step, i) => (
                                 <span key={i} className={`text-xs px-2.5 py-1 rounded-full flex items-center gap-1 ${step.includes("✅") ? "badge-green" : step.includes("→") ? "bg-green-500/20 text-green-400 border border-green-500/30" : "glass text-white/30"}`}>
                                     {step}
                                 </span>
@@ -104,3 +104,5 @@ export default function PathsPage() {
         </div>
     );
 }
+
+

@@ -4,8 +4,7 @@ const nextConfig: NextConfig = {
     output: 'export',
     trailingSlash: true,
     devIndicators: false,
-    basePath: '/Pipsology',
-    assetPrefix: '/Pipsology/',
+    basePath: '/TradeyMarkets',
     images: {
         unoptimized: true,
         remotePatterns: [

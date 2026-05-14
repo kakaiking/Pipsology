@@ -3,6 +3,8 @@ import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { ConsoleCleaner } from "@/components/ConsoleCleaner";
+import { MainWrapper } from "@/components/layout/MainWrapper";
 
 const inter = Inter({
     subsets: ["latin"],
@@ -23,11 +25,11 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-    title: "Pipsology — New to forex?",
+    title: "Tradey Markets — New to forex?",
     description: "The ultimate forex & crypto trading education platform. Learn, practice, analyze, and grow with AI-powered tools.",
     keywords: ["forex trading", "learn forex", "trading education", "cryptocurrency", "trading journal"],
     openGraph: {
-        title: "Pipsology — New to forex?",
+        title: "Tradey Markets — New to forex?",
         description: "The ultimate forex & crypto trading education platform.",
         type: "website",
     },
@@ -35,12 +37,18 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
-        <html lang="en" className={`scroll-smooth ${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}>
-            <body className="bg-[#0a0f0d] text-[#e8f5ef] antialiased">
+        <html lang="en" className={`scroll-smooth ${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`} data-scroll-behavior="smooth">
+            <head>
+                <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+            </head>
+            <body className="bg-[#0a0f0d] text-[#e8f5ef] antialiased relative">
+                <ConsoleCleaner />
                 <Navbar />
-                <main className="min-h-screen pt-16">{children}</main>
+                <MainWrapper>{children}</MainWrapper>
                 <Footer />
             </body>
         </html>
     );
 }
+
+
