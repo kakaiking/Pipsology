@@ -59,26 +59,10 @@ export default async function LessonPage({ params }: { params: Promise<{ grade: 
                         <span className="text-white/60">{currentLesson?.title || slug.replace(/-/g, ' ')}</span>
                     </div>
 
-                    {/* Lesson header */}
-                    <div className="glass rounded-2xl p-6 mb-6">
-                        <div className="flex items-start justify-between gap-4">
-                            <div>
-                                <span className="badge-green text-xs px-2 py-0.5 rounded-full font-medium">Free Lesson</span>
-                                <h1 className="text-2xl md:text-3xl font-bold font-display mt-3 mb-2">{currentLesson?.title || slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</h1>
-                                <div className="flex items-center gap-4 text-sm text-white/40">
-                                    <span>{currentGrade?.title || grade} · Lesson {currentIndex + 1} of {lessons.length || 6}</span>
-                                    <span>~8 min read</span>
-                                </div>
-                            </div>
-                            <div className="text-4xl text-green-400">
-                                {currentIndex === 0 ? "💱" : currentIndex === 1 ? "📈" : currentIndex === 2 ? "🕒" : currentIndex === 3 ? "🏦" : currentIndex === 4 ? "💡" : "💰"}
-                            </div>
-                        </div>
-                    </div>
 
                     {/* Lesson body with Scrollytelling */}
                     <div className="mb-6 relative" style={{ position: 'relative' }}>
-                        <ScrollytellingLesson sections={sections} />
+                        <ScrollytellingLesson sections={sections} grade={grade} slug={slug} />
                     </div>
 
                     {/* Navigation */}

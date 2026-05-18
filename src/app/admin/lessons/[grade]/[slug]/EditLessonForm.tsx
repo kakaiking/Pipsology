@@ -13,7 +13,8 @@ import {
   ChevronDown, 
   Trash2,
   X,
-  ArrowLeft
+  ArrowLeft,
+  Video
 } from "lucide-react";
 import { courseGrades, curricula } from "@/lib/data";
 
@@ -56,7 +57,8 @@ export default function EditLessonForm() {
       id: `block-${Date.now()}`,
       title: "",
       text: [""],
-      visualType: "default"
+      visualType: "default",
+      videoUrl: ""
     }]);
   };
 
@@ -255,6 +257,22 @@ export default function EditLessonForm() {
                       rows={5}
                       className="w-full bg-black/40 border border-white/10 rounded-xl py-4 px-4 text-white focus:outline-none focus:ring-2 focus:ring-green-500/50 transition-all resize-none"
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-white/30 uppercase tracking-wider mb-2">YouTube Video Link</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Video size={18} className="text-white/40" />
+                      </div>
+                      <input
+                        type="text"
+                        value={block.videoUrl || ""}
+                        onChange={(e) => updateContentBlock(index, "videoUrl", e.target.value)}
+                        placeholder="e.g., https://www.youtube.com/watch?v=..."
+                        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

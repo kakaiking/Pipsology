@@ -2,13 +2,15 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import { 
     Landmark, Building2, TrendingUp, User, Globe, DollarSign, ArrowRightLeft, 
     History, MoveHorizontal, MapPin, Briefcase, Building, Scale, Lock, 
     Coins, AlertTriangle, Zap, Headphones, Wallet, Ruler, ClipboardList, 
-    Smartphone, Rewind, Trophy, Eye, RefreshCw, Ghost, TrendingDown, BookOpen
+    Smartphone, Rewind, Trophy, Eye, RefreshCw, Ghost, TrendingDown, BookOpen,
+    Play, Heart, Share2, Music, ChevronDown, Volume2, VolumeX,
+    Maximize2, Minimize2
 } from "lucide-react";
-import { InDepthModal } from "./InDepthModal";
 
 export interface SectionContent {
     id: string;
@@ -16,153 +18,492 @@ export interface SectionContent {
     text: string[];
     visualType: string;
     inDepth?: string[];
+    videoUrl?: string;
 }
 
 interface ScrollytellingLessonProps {
     sections: SectionContent[];
+    grade: string;
+    slug: string;
 }
 
-export const ScrollytellingLesson: React.FC<ScrollytellingLessonProps> = ({ sections }) => {
+import { generateInDepthContent } from "@/lib/lessonHelpers";
+
+export const ScrollytellingLesson: React.FC<ScrollytellingLessonProps> = ({ sections, grade, slug }) => {
     const [activeSection, setActiveSection] = useState(0);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalContent, setModalContent] = useState<{title: string, content: string[]}>({title: "", content: []});
+    const [likedSections, setLikedSections] = useState<Record<string, boolean>>({});
+    const [sectionLikes, setSectionLikes] = useState<Record<string, number>>({});
+    const [bookmarkedSections, setBookmarkedSections] = useState<Record<string, boolean>>({});
+    const [showToast, setShowToast] = useState(false);
+    const [activeHearts, setActiveHearts] = useState<Record<string, { id: number; x: number; y: number }[]>>({});
+    const [isMuted, setIsMuted] = useState(true);
+    const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+    const [readyVideos, setReadyVideos] = useState<Record<string, boolean>>({});
+    const [playingStates, setPlayingStates] = useState<Record<string, boolean>>({});
+    const [isFullscreen, setIsFullscreen] = useState(false);
+
+    // Reset playing state to true when active section changes to hide play overlay on snap
+    useEffect(() => {
+        const activeSecId = sections[activeSection]?.id;
+        if (activeSecId) {
+            setPlayingStates((prev) => ({ ...prev, [activeSecId]: true }));
+        }
+    }, [activeSection, sections]);
+
+    const togglePlay = (id: string) => {
+        const iframe = document.getElementById(`youtube-iframe-${id}`) as HTMLIFrameElement | null;
+        if (!iframe || !iframe.contentWindow) return;
+
+        const currentlyPlaying = playingStates[id] !== false; // defaults to true
+        const nextPlaying = !currentlyPlaying;
+
+        setPlayingStates((prev) => ({ ...prev, [id]: nextPlaying }));
+
+        iframe.contentWindow.postMessage(
+            JSON.stringify({
+                event: "command",
+                func: nextPlaying ? "playVideo" : "pauseVideo",
+                args: []
+            }),
+            "*"
+        );
+    };
+
+    const toggleExpandSection = (secId: string) => {
+        setExpandedSections((prev) => ({
+            ...prev,
+            [secId]: !prev[secId]
+        }));
+    };
+    
     const containerRef = useRef<HTMLDivElement>(null);
 
-    const openModal = (title: string, content?: string[], text?: string[]) => {
-        const finalContent = (content && content.length >= 5) 
-            ? content 
-            : generateInDepthContent(title, text || []);
-        
-        setModalContent({ title, content: finalContent });
-        setIsModalOpen(true);
-    };
-
-    const generateInDepthContent = (title: string, context: string[]): string[] => {
-        const lowerTitle = title.toLowerCase();
-        
-        if (lowerTitle.includes("broker") || lowerTitle.includes("platform")) {
-            return [
-                `Choosing the right ${title} is one of the most critical decisions in your trading career. A broker or platform isn't just a piece of software; it's your primary gateway to the global financial markets. The infrastructure provided by these entities dictates everything from your execution speed and slippage to the security of your deposited capital.`,
-                `Regulation is the cornerstone of a safe trading environment. ${context[0] || 'As discussed'}, authorities such as the FCA in the UK, ASIC in Australia, and the NFA/CFTC in the United States set rigorous standards for transparency and capital adequacy. Trading with an unregulated entity is essentially gambling with your principal, as there are no legal protections if the firm disappears or engages in unethical practices.`,
-                `Technological capabilities vary significantly between different providers. A professional platform should offer not just basic charting, but advanced order types like OCO (One Cancels the Other) and trailing stops. Furthermore, the underlying technology—whether it's ECN (Electronic Communication Network) or STP (Straight Through Processing)—impacts the spreads and commissions you pay on every single trade.`,
-                `Customer support and educational resources are often overlooked until they are desperately needed. Because the forex market operates 24/5, your support team should be available around the clock. High-quality brokers also provide deep liquidity pools, ensuring that even during high-volatility news events, you can enter and exit positions with minimal deviation from your desired price.`,
-                `Finally, the ease of deposits and withdrawals is a litmus test for a broker's integrity. While most firms make it incredibly easy to deposit funds, the true measure of a professional firm is how quickly and transparently they process withdrawal requests. Always research a firm's reputation regarding payouts before committing significant capital.`,
-                `In conclusion, take your time when evaluating ${title}. Use demo accounts to test the platform's stability and the broker's execution quality. By selecting a partner that aligns with your trading style and provides a secure, low-latency environment, you lay the necessary foundation for long-term profitability and peace of mind.`
-            ];
-        }
-
-        if (lowerTitle.includes("analysis") || lowerTitle.includes("technical") || lowerTitle.includes("fundamental")) {
-            return [
-                `The study of ${title} is what separates speculative gambling from professional trading. It is the process of extracting meaning from the chaos of market data to identify high-probability opportunities. Whether you focus on price action, economic indicators, or market sentiment, the goal remains the same: building a consistent edge over the competition.`,
-                `Technical analysis, which often falls under the umbrella of ${title}, is based on the premise that all relevant information is already reflected in the price. By studying historical patterns, we look for recurring behaviors in the market's collective psychology. This approach assumes that human reactions to fear and greed are consistent across time and markets.`,
-                `Fundamental analysis, on the other hand, looks at the "why" behind the move. ${context[0] || 'This involves'}, analyzing interest rates, GDP growth, and geopolitical stability. For example, a central bank's decision to raise interest rates usually strengthens its currency because it attracts foreign investment. Understanding these macro drivers allows you to position yourself for multi-week or multi-month trends.`,
-                `The most successful traders often use a "top-down" approach that combines multiple layers of analysis. They might start with the fundamental outlook to determine a directional bias, then use technical levels to identify precise entry and exit points. This synergy between different schools of thought provides a much higher level of confidence in your trade setups.`,
-                `However, no amount of ${title} can eliminate risk entirely. The market is a game of probabilities, not certainties. Even the most perfect fundamental and technical alignment can be disrupted by a surprise news event or a shift in sentiment. This is why every analysis-based decision must be accompanied by a robust risk management plan.`,
-                `Ultimately, mastering ${title} requires practice and screen time. You must learn to filter out the noise and focus on the signals that actually move the needle. As you refine your approach, you will develop a unique perspective on the markets that allows you to remain calm and objective even in the midst of high volatility.`
-            ];
-        }
-
-        return [
-            `The concept of ${title} is fundamental to understanding the broader dynamics of the financial markets. While basic definitions provide a starting point, a truly professional perspective requires looking at the underlying structural forces. In this deep dive, we explore how ${title} functions within the complex ecosystem of global currency exchange and why it remains a critical focus for institutional and retail traders alike.`,
-            `Historically, ${title} has evolved significantly. ${context[0] || 'As mentioned in the lesson'}, this area represents a key junction between economic policy and market sentiment. When we look at the historical data, we see that the most successful participants are those who don't just react to price movements, but understand the "why" behind them. This involves analyzing macro-economic indicators and geopolitical stability.`,
-            `From a technical standpoint, ${title} interacts with other market components in subtle ways. For instance, the relationship between volume and price action often dictates the reliability of signals in this category. Professional traders often look for confluence—where multiple indicators or analysis types align—to confirm their hypotheses about ${title}. This multi-layered approach reduces risk and increases the probability of capturing significant moves.`,
-            `Psychology also plays a massive role. The market is, at its heart, a collection of human decisions. Because so many traders are focused on ${title}, it can become a self-fulfilling prophecy. When a critical threshold is reached, the collective reaction of thousands of market participants can lead to explosive movements. Understanding this herd behavior allows you to anticipate turns rather than just following the crowd.`,
-            `Risk management is the final, and perhaps most important, piece of the puzzle. No matter how deep your understanding of ${title}, the market can always behave unexpectedly. Professionals use strictly defined parameters to protect their capital, ensuring that no single event related to ${title} can jeopardize their long-term survival. Consistency in applying these rules is what separates the veterans from the amateurs.`,
-            `In conclusion, mastering ${title} is a journey of continuous learning. As you gain more experience, you'll start to see patterns and relationships that aren't visible on the surface. By combining the foundational knowledge from this lesson with the advanced insights in this deep dive, you are well on your way to developing the "trader's intuition" that defines the world's most successful market participants.`
-        ];
-    };
-
-    const { scrollYProgress } = useScroll({
-        target: containerRef,
-        offset: ["start start", "end end"]
-    });
-
+    // Initializing mock likes count for each section
     useEffect(() => {
-        const unsubscribe = scrollYProgress.on("change", (latest) => {
-            const sectionCount = sections.length;
-            const index = Math.min(
-                Math.floor(latest * sectionCount),
-                sectionCount - 1
-            );
-            setActiveSection(index);
+        const initialLikes: Record<string, number> = {};
+        sections.forEach((sec, idx) => {
+            initialLikes[sec.id] = 120 + idx * 45 + Math.floor(Math.random() * 20);
         });
-        return () => unsubscribe();
-    }, [scrollYProgress, sections]);
+        setSectionLikes(initialLikes);
+    }, [sections]);
+
+    // Observe active slide during native snap scrolling
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        const secIdx = entry.target.getAttribute("data-section-index");
+                        if (secIdx !== null) {
+                            setActiveSection(parseInt(secIdx));
+                        }
+                    }
+                });
+            },
+            {
+                root: containerRef.current,
+                threshold: 0.6, // Fire when 60% of the slide height is visible
+            }
+        );
+
+        const cards = containerRef.current?.querySelectorAll("[data-section-card]");
+        cards?.forEach((card) => observer.observe(card));
+
+        return () => {
+            cards?.forEach((card) => observer.unobserve(card));
+        };
+    }, [sections]);
+
+    // Handle Mute/Unmute state using YouTube postMessage API to avoid reloading/restarting the video
+    useEffect(() => {
+        const activeSecId = sections[activeSection]?.id;
+        if (!activeSecId) return;
+
+        const toggleSound = () => {
+            const iframe = document.getElementById(`youtube-iframe-${activeSecId}`) as HTMLIFrameElement | null;
+            if (iframe && iframe.contentWindow) {
+                if (isMuted) {
+                    iframe.contentWindow.postMessage(
+                        JSON.stringify({
+                            event: "command",
+                            func: "mute",
+                            args: []
+                        }),
+                        "*"
+                    );
+                } else {
+                    iframe.contentWindow.postMessage(
+                        JSON.stringify({
+                            event: "command",
+                            func: "unMute",
+                            args: []
+                        }),
+                        "*"
+                    );
+                    iframe.contentWindow.postMessage(
+                        JSON.stringify({
+                            event: "command",
+                            func: "setVolume",
+                            args: [100]
+                        }),
+                        "*"
+                    );
+                }
+            }
+        };
+
+        // Trigger immediately
+        toggleSound();
+
+        // Trigger with slight delays to catch iframe initialization when scrolling between sections
+        const t1 = setTimeout(toggleSound, 300);
+        const t2 = setTimeout(toggleSound, 800);
+        const t3 = setTimeout(toggleSound, 1500);
+
+        return () => {
+            clearTimeout(t1);
+            clearTimeout(t2);
+            clearTimeout(t3);
+        };
+    }, [isMuted, activeSection, sections]);
+
+    // Interaction Handlers
+    const handleLikeClick = (secId: string) => {
+        const isLiked = likedSections[secId];
+        setLikedSections((prev) => ({ ...prev, [secId]: !isLiked }));
+        setSectionLikes((prev) => ({
+            ...prev,
+            [secId]: isLiked ? (prev[secId] || 0) - 1 : (prev[secId] || 0) + 1,
+        }));
+    };
+
+    const handleBookmarkClick = (secId: string) => {
+        setBookmarkedSections((prev) => ({ ...prev, [secId]: !bookmarkedSections[secId] }));
+    };
+
+    const handleShareClick = (secId: string) => {
+        if (typeof window !== "undefined") {
+            navigator.clipboard.writeText(`${window.location.origin}/learn/${grade}/${slug}?sec=${secId}`);
+            setShowToast(true);
+            setTimeout(() => setShowToast(false), 2000);
+        }
+    };
+
+    // Double click to Like + Floating Heart effect
+    const handleDoubleClick = (e: React.MouseEvent<HTMLDivElement>, secId: string) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const newHeart = { id: Date.now() + Math.random(), x, y };
+        setActiveHearts((prev) => ({
+            ...prev,
+            [secId]: [...(prev[secId] || []), newHeart],
+        }));
+
+        setTimeout(() => {
+            setActiveHearts((prev) => ({
+                ...prev,
+                [secId]: (prev[secId] || []).filter((h) => h.id !== newHeart.id),
+            }));
+        }, 800);
+
+        if (!likedSections[secId]) {
+            setLikedSections((prev) => ({ ...prev, [secId]: true }));
+            setSectionLikes((prev) => ({ ...prev, [secId]: (prev[secId] || 0) + 1 }));
+        }
+    };
+
+    const scrollToSection = (idx: number) => {
+        const cards = containerRef.current?.querySelectorAll("[data-section-card]");
+        if (cards && cards[idx]) {
+            cards[idx].scrollIntoView({ behavior: "smooth" });
+        }
+    };
+
+    const extractVideoId = (url?: string) => {
+        if (!url) return null;
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    };
 
     return (
-        <div ref={containerRef} className="relative flex flex-col lg:flex-row gap-8" style={{ position: 'relative' }}>
-            {/* Text Side */}
-            <div className="flex-1">
-                {sections.map((section, index) => (
-                    <motion.section
-                        key={`${section.id}-${index}`}
-                        initial={{ opacity: 0.2, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8 }}
-                        viewport={{ margin: "-20% 0px -40% 0px" }}
-                        className={`glass p-8 rounded-2xl relative z-10 flex flex-col justify-center min-h-[85vh] ${
-                            index === sections.length - 1 ? "mb-0" : "mb-[30vh]"
-                        }`}
-                    >
-                        <h3 className="text-2xl font-bold text-white mb-4 font-display">
-                            {section.title}
-                        </h3>
-                        <div className="space-y-4 text-white/70 leading-relaxed text-lg">
-                            {section.text.map((t, i) => (
-                                <p key={i}>{t}</p>
-                            ))}
-                        </div>
-
-                        {/* Read More Button */}
-                        <div className="mt-8 flex justify-end">
-                            <button 
-                                onClick={() => openModal(section.title, section.inDepth, section.text)}
-                                className="group flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-medium text-white/60 hover:text-white transition-all"
+        <div className="w-full relative flex flex-col items-center">
+            {/* Snapping Scroll Area (occupies full container width & height) */}
+            <div className="w-full h-[78vh] rounded-3xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.6)] overflow-hidden relative bg-[#040806] flex flex-col">
+                <div
+                    ref={containerRef}
+                    className="flex-1 w-full h-full overflow-y-scroll snap-y snap-mandatory scrollbar-none"
+                    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                >
+                    {sections.map((section, idx) => {
+                        const videoId = extractVideoId(section.videoUrl);
+                        const isActive = activeSection === idx;
+                        
+                        return (
+                            <div
+                                key={section.id}
+                                data-section-card
+                                data-section-index={idx}
+                                className="w-full h-full snap-start snap-always relative overflow-hidden flex flex-col justify-end bg-black"
+                                onDoubleClick={(e) => handleDoubleClick(e, section.id)}
                             >
-                                <span>Read More</span>
-                                <div className="p-1 bg-green-500/20 group-hover:bg-green-500/40 rounded-lg transition-colors">
-                                    <BookOpen size={14} className="text-green-400" />
+                                {/* Background Layer (Video or interactive visual) */}
+                                {videoId ? (
+                                    <div className="absolute inset-0 w-full h-full pointer-events-auto z-0 overflow-hidden bg-black">
+                                        {isActive && (
+                                            <>
+                                                {/* If paused, show the high-quality still thumbnail to hide YouTube's native pause overlay */}
+                                                {playingStates[section.id] === false && (
+                                                    <img
+                                                        src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
+                                                        alt={section.title}
+                                                        className="absolute inset-0 w-full h-full object-cover z-5 opacity-40 animate-fade-in"
+                                                    />
+                                                )}
+                                                <iframe
+                                                    id={`youtube-iframe-${section.id}`}
+                                                    width="100%"
+                                                    height="100%"
+                                                    src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&enablejsapi=1`}
+                                                    title={section.title}
+                                                    frameBorder="0"
+                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                    className={`w-full h-full object-cover pointer-events-none scale-[1.3] origin-center transition-opacity duration-300 ${
+                                                        playingStates[section.id] !== false
+                                                            ? (isFullscreen ? "opacity-100" : "opacity-60") 
+                                                            : "opacity-0 pointer-events-none"
+                                                    }`}
+                                                ></iframe>
+                                            </>
+                                        )}
+                                        {/* Custom Play Button Overlay Widget */}
+                                        {playingStates[section.id] === false && (
+                                            <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                                                <div className="w-16 h-16 bg-black/45 backdrop-blur-md border border-white/10 rounded-full flex items-center justify-center shadow-2xl transition-transform duration-300 scale-100">
+                                                    <Play className="text-white fill-white ml-1.5" size={24} />
+                                                </div>
+                                            </div>
+                                        )}
+                                        {/* Transparent overlay that shields the iframe from receiving touch/click events, completely preventing pause overlays */}
+                                        <div className="absolute inset-0 w-full h-full z-10 pointer-events-auto bg-transparent" />
+                                    </div>
+                                ) : (
+                                    /* Interactive diagram representation inside a stunning glowing card when there is no video */
+                                    <div className="absolute inset-0 w-full h-full bg-gradient-to-tr from-[#08100d] via-[#040806] to-[#0d1c14] z-0 overflow-hidden flex items-center justify-center">
+                                        {/* Ambient Glows */}
+                                        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-green-500/5 rounded-full blur-[100px] pointer-events-none" />
+                                        <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none" />
+                                        
+                                        <div className="relative z-10 w-full max-w-xs md:max-w-sm aspect-square flex items-center justify-center bg-white/[0.01] border border-white/5 rounded-[40px] shadow-2xl backdrop-blur-md p-8 select-none">
+                                            <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent rounded-[40px] pointer-events-none" />
+                                            <div className="scale-90 md:scale-100 transition-transform">
+                                                {renderVisual(section.visualType)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Gradient Dark Overlay */}
+                                <div className={`absolute inset-0 transition-all duration-500 pointer-events-none z-10 ${
+                                    isFullscreen
+                                        ? "bg-transparent"
+                                        : expandedSections[section.id]
+                                            ? "bg-black/85 backdrop-blur-[3px]"
+                                            : "bg-gradient-to-t from-black/95 via-black/30 to-black/30"
+                                }`} />
+
+                                {/* Transparent touch/click shielding layer that sits on top of the background layer to swallow all interactions and prevent the iframe controls from ever being triggered */}
+                                <div 
+                                     onClick={() => togglePlay(section.id)}
+                                     className="absolute inset-0 w-full h-full z-15 pointer-events-auto bg-transparent cursor-pointer" 
+                                 />
+
+                                {/* Sidebar Actions Panel */}
+                                <div className="absolute right-6 bottom-8 flex flex-col items-center gap-5 z-20 pointer-events-auto">
+                                    {/* Academy Avatar */}
+                                    {!isFullscreen && (
+                                        <div className="relative mb-1">
+                                            <div className="w-11 h-11 rounded-full border-2 border-green-400 bg-green-500/20 flex items-center justify-center font-bold text-xs text-green-400 select-none">
+                                                PA
+                                            </div>
+                                            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-green-400 text-black rounded-full w-4.5 h-4.5 flex items-center justify-center font-extrabold text-[10px] shadow select-none">
+                                                ✓
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Like Button */}
+                                    {!isFullscreen && (
+                                        <button
+                                            onClick={() => handleLikeClick(section.id)}
+                                            className="flex flex-col items-center group"
+                                        >
+                                            <div className={`p-3 rounded-full transition-all duration-300 ${
+                                                likedSections[section.id]
+                                                    ? "bg-red-500/20 text-red-500 scale-110 shadow-[0_0_15px_rgba(239,68,68,0.2)]"
+                                                    : "bg-black/50 hover:bg-black/70 text-white border border-white/5"
+                                            }`}>
+                                                <Heart size={20} fill={likedSections[section.id] ? "currentColor" : "none"} />
+                                            </div>
+                                            <span className="text-xs font-bold text-white/80 mt-1 select-none">
+                                                {sectionLikes[section.id] || 0}
+                                            </span>
+                                        </button>
+                                    )}
+
+
+                                    {/* Share Button */}
+                                    {!isFullscreen && (
+                                        <button
+                                            onClick={() => handleShareClick(section.id)}
+                                            className="flex flex-col items-center group"
+                                        >
+                                            <div className="p-3 bg-black/50 hover:bg-black/70 text-white rounded-full transition-all border border-white/5">
+                                                <Share2 size={20} />
+                                            </div>
+                                            <span className="text-xs font-bold text-white/80 mt-1 select-none">Share</span>
+                                        </button>
+                                    )}
+
+                                    {/* Mute/Unmute Button */}
+                                    {!isFullscreen && (
+                                        <button
+                                            onClick={() => setIsMuted((prev) => !prev)}
+                                            className="flex flex-col items-center group"
+                                        >
+                                            <div className={`p-3 rounded-full transition-all duration-300 ${
+                                                !isMuted
+                                                    ? "bg-green-500/20 text-green-400 scale-110 shadow-[0_0_15px_rgba(74,222,128,0.2)] border border-green-500/20"
+                                                    : "bg-black/50 hover:bg-black/70 text-white border border-white/5"
+                                            }`}>
+                                                {!isMuted ? <Volume2 size={20} className="animate-pulse" /> : <VolumeX size={20} />}
+                                            </div>
+                                            <span className="text-xs font-bold text-white/80 mt-1 select-none">
+                                                {!isMuted ? "Sound On" : "Mute"}
+                                            </span>
+                                        </button>
+                                    )}
+
+                                    {/* Full Screen Button */}
+                                    <button
+                                        onClick={() => setIsFullscreen((prev) => !prev)}
+                                        className="flex flex-col items-center group"
+                                    >
+                                        <div className={`p-3 rounded-full transition-all duration-300 ${
+                                            isFullscreen
+                                                ? "bg-green-500/20 text-green-400 scale-110 shadow-[0_0_15px_rgba(74,222,128,0.2)] border border-green-500/20"
+                                                : "bg-black/50 hover:bg-black/70 text-white border border-white/5"
+                                        }`}>
+                                            {isFullscreen ? <Minimize2 size={20} /> : <Maximize2 size={20} />}
+                                        </div>
+                                        <span className="text-xs font-bold text-white/80 mt-1 select-none">
+                                            {isFullscreen ? "Exit" : "Fullscreen"}
+                                        </span>
+                                    </button>
                                 </div>
-                            </button>
-                        </div>
-                    </motion.section>
-                ))}
-            </div>
 
-            {/* In-depth Modal */}
-            <InDepthModal 
-                isOpen={isModalOpen} 
-                onClose={() => setIsModalOpen(false)} 
-                title={modalContent.title} 
-                content={modalContent.content} 
-            />
+                                {/* Bottom Details Panel */}
+                                {!isFullscreen && (
+                                    <div className="absolute left-8 right-28 bottom-8 z-20 text-left pointer-events-auto max-w-xl">
+                                        <h3 className="font-bold text-sm text-green-400 mb-1.5">
+                                            @pipsology_academy
+                                        </h3>
+                                        
+                                        <h4 className="font-bold text-white text-lg md:text-xl leading-snug mb-2">
+                                            {section.title}
+                                        </h4>
+                                        
+                                        {/* Elegant scrollable text description panel */}
+                                        <div className="max-h-[22vh] overflow-y-auto pr-2 scrollbar-none mb-3 text-white/80 text-xs md:text-sm leading-relaxed space-y-2">
+                                            {(() => {
+                                                const combinedText = section.text.join(" ");
+                                                const isLongText = combinedText.length > 100;
+                                                const isExpanded = !!expandedSections[section.id];
+                                                
+                                                if (isLongText && !isExpanded) {
+                                                    return (
+                                                        <p>
+                                                            {combinedText.slice(0, 100)}...
+                                                            <button 
+                                                                onClick={() => toggleExpandSection(section.id)}
+                                                                className="text-green-400 hover:text-green-300 font-semibold ml-1 focus:outline-none transition-colors"
+                                                            >
+                                                                read more
+                                                            </button>
+                                                        </p>
+                                                    );
+                                                }
+                                                
+                                                return section.text.map((paragraph, pIdx) => (
+                                                    <p key={pIdx}>
+                                                        {paragraph}
+                                                        {isLongText && pIdx === section.text.length - 1 && (
+                                                            <button 
+                                                                onClick={() => toggleExpandSection(section.id)}
+                                                                className="text-green-400 hover:text-green-300 font-semibold ml-2 focus:outline-none transition-colors inline-block"
+                                                            >
+                                                                read less
+                                                            </button>
+                                                        )}
+                                                    </p>
+                                                ));
+                                            })()}
+                                        </div>
+                                    </div>
+                                )}
 
-            {/* Visual Side (Sticky) */}
-            <div className="hidden lg:block w-[400px] sticky top-24 h-[70vh] rounded-3xl overflow-hidden glass-brand border border-white/10 shadow-2xl">
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={sections[activeSection]?.id || "empty"}
-                        initial={{ opacity: 0, scale: 0.9, rotateY: 20 }}
-                        animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-                        exit={{ opacity: 0, scale: 1.1, rotateY: -20 }}
-                        transition={{ duration: 0.5, ease: "easeOut" }}
-                        className="w-full h-full flex items-center justify-center p-8 text-center"
-                    >
-                        {sections[activeSection] && renderVisual(sections[activeSection].visualType)}
-                    </motion.div>
-                </AnimatePresence>
-
-                {/* Progress Indicator */}
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2">
-                    {sections.map((_, i) => (
-                        <div
-                            key={i}
-                            className={`h-1 rounded-full transition-all duration-300 ${
-                                i === activeSection ? "w-8 bg-green-400" : "w-2 bg-white/20"
-                            }`}
-                        />
-                    ))}
+                                {/* Double Tap Heart Overlays */}
+                                {activeHearts[section.id]?.map((heart) => (
+                                    <motion.div
+                                        key={heart.id}
+                                        initial={{ scale: 0, opacity: 1, y: 0, rotate: Math.random() * 40 - 20 }}
+                                        animate={{ scale: [1, 1.7, 1], opacity: [1, 1, 0], y: -90 }}
+                                        transition={{ duration: 0.8, ease: "easeOut" }}
+                                        className="absolute z-30 pointer-events-none text-red-500 text-6xl drop-shadow-[0_0_20px_rgba(239,68,68,0.6)]"
+                                        style={{ left: heart.x - 30, top: heart.y - 30 }}
+                                    >
+                                        ❤️
+                                    </motion.div>
+                                ))}
+                            </div>
+                        );
+                    })}
                 </div>
+
+                {/* Vertical Progress Navigation Dots */}
+                {!isFullscreen && (
+                    <div className="absolute left-6 top-1/2 -translate-y-1/2 flex flex-col gap-2.5 z-20">
+                        {sections.map((section, idx) => {
+                            const isActive = activeSection === idx;
+                            return (
+                                <button
+                                    key={section.id}
+                                    onClick={() => scrollToSection(idx)}
+                                    className={`w-2 rounded-full transition-all duration-300 ${
+                                        isActive ? "h-6 bg-green-400" : "h-2 bg-white/30 hover:bg-white/50"
+                                    }`}
+                                />
+                            );
+                        })}
+                    </div>
+                )}
+
+                {/* Swipe Indicator (Helpful UX) */}
+                {!isFullscreen && (
+                    <div className="absolute top-8 left-1/2 -translate-x-1/2 z-20 pointer-events-none text-white/40 text-[10px] flex flex-col items-center gap-1.5 animate-pulse">
+                        <span>Scroll down for next topic</span>
+                        <ChevronDown size={14} className="animate-bounce" />
+                    </div>
+                )}
+
+                {/* Link Share Toast */}
+                {showToast && (
+                    <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-green-500 text-black text-xs font-extrabold px-4 py-2 rounded-full shadow-lg z-50 flex items-center gap-1 border border-green-400">
+                        🔗 Section link copied to clipboard!
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -1,5 +1,6 @@
+"use client";
 import { useState } from "react";
-import { Calendar, Filter, Globe, Users, Info, Plus } from "lucide-react";
+import { Calendar, Filter, Globe, Users, Info, Plus, Clock } from "lucide-react";
 import { calendarEvents, communityEvents } from "@/lib/data";
 
 const currencies = ["All", "USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "NZD"];

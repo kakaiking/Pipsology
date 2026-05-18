@@ -7,7 +7,18 @@ import {
     Crown, Menu, X, ChevronDown, Flame, Star, LogIn
 } from "lucide-react";
 
-const navItems = [
+interface NavItem {
+    label: string;
+    icon: any;
+    href?: string;
+    children?: {
+        label: string;
+        href: string;
+        desc: string;
+    }[];
+}
+
+const navItems: NavItem[] = [
     {
         label: "Learn",
         icon: BookOpen,

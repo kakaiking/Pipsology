@@ -30,7 +30,31 @@ export const courseGrades = [
     { id: "elementary", title: "Intermediate", subtitle: "Core technical analysis fundamentals.", lessons: 5, free: true, progress: 60, color: "#4ade80" },
 ];
 
-
+export const quizList = [
+    {
+        slug: "what-is-forex",
+        title: "What is Forex?",
+        questions: [
+            { q: "What does 'Forex' stand for?", options: ["Foreign Exchange", "Forward Exchange", "Fiscal Exchange", "Federal Exchange"], answer: 0, explanation: "Forex is short for Foreign Exchange — the global market for trading currencies." },
+            { q: "What is a 'pip' in forex trading?", options: ["A type of currency pair", "The smallest unit of price movement", "A brokerage fee", "A trading session"], answer: 1, explanation: "A pip (Percentage in Point) is the smallest standard unit of price movement in forex, usually 0.0001 for most pairs." },
+            { q: "Which is the most traded currency pair in the world?", options: ["GBP/USD", "USD/JPY", "EUR/USD", "AUD/USD"], answer: 2, explanation: "EUR/USD is the world's most traded currency pair, accounting for about 23% of daily forex volume." },
+            { q: "Forex trading operates:", options: ["Only on weekdays 9am-5pm EST", "24 hours a day, 5 days a week", "24 hours a day, 7 days a week", "Only during the London session"], answer: 1, explanation: "Forex trades 24/5 — from Sunday 5pm ET to Friday 5pm ET across major financial centers globally." },
+        ],
+        category: "Basics",
+        difficulty: "Beginner",
+        completions: "124K",
+        score: 85
+    },
+    { slug: "support-resistance", title: "Support & Resistance Levels", questions: [], category: "Technical", difficulty: "Beginner", completions: "98K", score: null },
+    { slug: "candlesticks-101", title: "Japanese Candlesticks 101", questions: [], category: "Technical", difficulty: "Intermediate", completions: "87K", score: null },
+    { slug: "fibonacci", title: "Fibonacci Retracements", questions: [], category: "Technical", difficulty: "Intermediate", completions: "72K", score: null },
+    { slug: "chart-patterns", title: "Important Chart Patterns", questions: [], category: "Technical", difficulty: "Intermediate", completions: "65K", score: null },
+    { slug: "oscillators", title: "Oscillators & Momentum", questions: [], category: "Indicators", difficulty: "Intermediate", completions: "58K", score: null },
+    { slug: "elliott-wave", title: "Elliott Wave Theory", questions: [], category: "Advanced", difficulty: "Advanced", completions: "41K", score: null },
+    { slug: "trading-style", title: "Which Trading Style Suits You?", questions: [], category: "Lifestyle", difficulty: "Beginner", completions: "95K", score: 100 },
+    { slug: "currency-codes", title: "Do You Know Your Currency Codes?", questions: [], category: "Basics", difficulty: "Beginner", completions: "112K", score: null },
+    { slug: "pivot-points", title: "Pivot Points", questions: [], category: "Technical", difficulty: "Intermediate", completions: "43K", score: null },
+];
 
 export const glossaryTerms = [
     { term: "Pip", slug: "pip", category: "Basics", definition: "The smallest unit of price movement for a currency pair. For most pairs, 1 pip = 0.0001." },
@@ -114,7 +138,8 @@ export const preschoolLessons = [
                     "The foreign exchange market (forex, FX, or currency market) is the world's largest, most liquid financial market.",
                     "Currencies are traded against each other as exchange rate pairs — for example, EUR/USD or GBP/JPY."
                 ],
-                visualType: "l1-intro"
+                visualType: "l1-intro",
+                videoUrl: "https://www.youtube.com/watch?v=oJ9Cz6dPZw0"
             },
             {
                 id: "scale",
@@ -123,7 +148,8 @@ export const preschoolLessons = [
                     "The forex market is massive. With a volume of $7.5 trillion per day traded, it dwarfs all global stock markets combined.",
                     "It operates 24 hours a day, 5 days a week across major financial centers in Sydney, Tokyo, London, and New York."
                 ],
-                visualType: "l1-scale"
+                visualType: "l1-scale",
+                videoUrl: "https://www.youtube.com/watch?v=q7J_27yZf7g"
             },
             {
                 id: "participants",
@@ -132,7 +158,8 @@ export const preschoolLessons = [
                     "All international trade and business requires currency exchange. Participants include:",
                     "Central Banks, Commercial Banks, Hedge Funds, Retail Traders, and Corporations."
                 ],
-                visualType: "l1-participants"
+                visualType: "l1-participants",
+                videoUrl: "https://www.youtube.com/watch?v=_YVQN6_nkfs"
             },
             {
                 id: "pairs",
@@ -141,7 +168,8 @@ export const preschoolLessons = [
                     "In forex, currencies always trade in pairs. When you buy €1,000 with US Dollars, you're simultaneously buying EUR and selling USD.",
                     "Major, Minor, and Exotic pairs make up the market ecosystem."
                 ],
-                visualType: "l1-pairs"
+                visualType: "l1-pairs",
+                videoUrl: "https://www.youtube.com/watch?v=54Z6Q-hN1yQ"
             },
             {
                 id: "history",
@@ -698,31 +726,31 @@ export const tradingVideos = [
         id: "v1",
         title: "Forex Trading for Beginners",
         description: "A complete guide to get started in Forex trading from scratch. Learn about currency pairs, pips, leverage, and how the market works.",
-        videoId: "SNX2F3G_YmY", 
+        videoId: "oJ9Cz6dPZw0", 
     },
     {
         id: "v2",
         title: "Price Action Trading Strategies",
         description: "Master the art of reading price charts without indicators. Learn about candlestick patterns, support/resistance, and market structure.",
-        videoId: "P67v_6rW6C0",
+        videoId: "q7J_27yZf7g",
     },
     {
         id: "v3",
         title: "Understanding Risk Management",
         description: "The most important skill in trading. Learn how to calculate position size, set stop losses, and manage your account capital effectively.",
-        videoId: "0h6Y-N5YxG8",
+        videoId: "_YVQN6_nkfs",
     },
     {
         id: "v4",
         title: "Trading Psychology",
         description: "Master your emotions and develop a winning mindset. Learn how to handle losses, avoid FOMO, and stay disciplined in your trading plan.",
-        videoId: "8mG5w7v_F7g",
+        videoId: "54Z6Q-hN1yQ",
     },
     {
         id: "v5",
         title: "Top 5 Forex Mistakes",
         description: "Avoid the common traps that wipe out most beginner accounts. Learn why over-leveraging and revenge trading are dangerous.",
-        videoId: "6vI4XzP0q0o",
+        videoId: "y7yEea5L3dE",
     }
 ];
 
