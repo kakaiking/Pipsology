@@ -1,11 +1,52 @@
 "use client";
 
-import React, { useState } from "react";
-import { courseGrades } from "@/lib/data";
+import React, { useState, useEffect } from "react";
 import LevelDetailPanel from "@/components/LevelDetailPanel";
 
 export default function LevelStories() {
-  const [active, setActive] = useState<string>(courseGrades[0]?.id || "");
+  const [grades, setGrades] = useState<any[]>([]);
+  const [active, setActive] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchGradesAndProgress() {
+      try {
+        setLoading(true);
+        const [res, progressRes] = await Promise.all([
+          fetch("/api/grades"),
+          fetch("/api/user/progress")
+        ]);
+
+        let fetched: any[] = [];
+        let progressData: any = {};
+
+        if (res.ok) {
+          const data = await res.json();
+          fetched = data.grades || [];
+        }
+
+        if (progressRes.ok) {
+          progressData = await progressRes.json();
+        }
+
+        // Map progress to each grade
+        fetched = fetched.map((g: any) => ({
+          ...g,
+          progress: (progressData.progress && progressData.progress[g.id]) ?? 0
+        }));
+
+        setGrades(fetched);
+        if (fetched.length > 0) {
+          setActive(fetched[0].id);
+        }
+      } catch (err) {
+        console.error("Failed to fetch grades and progress in LevelStories:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchGradesAndProgress();
+  }, []);
 
   return (
     <section className="mb-10">
@@ -14,19 +55,28 @@ export default function LevelStories() {
         {/* Bubbles - horizontal on small, vertical left column on large */}
         <div className="flex-shrink-0 w-full lg:w-72">
           <div className="flex gap-3 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible lg:gap-3">
-            {courseGrades.map((g) => (
-              <button
-                key={g.id}
-                onClick={() => setActive(g.id)}
-                aria-current={active === g.id}
-                className={`flex-shrink-0 flex flex-row items-center gap-3 text-left ${active === g.id ? "scale-105" : "opacity-80 hover:opacity-100 transition-opacity"}`}
-              >
-                <div className={`w-14 h-14 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold ${g.progress === 100 ? "bg-green-500/20 text-green-400" : "bg-white/5 text-white/60"}`}>
-                  {g.title.slice(0, 2).toUpperCase()}
+            {loading ? (
+              [1, 2, 3].map((n) => (
+                <div key={n} className="flex-shrink-0 flex flex-row items-center gap-3 animate-pulse">
+                  <div className="w-14 h-14 rounded-full bg-white/5 flex-shrink-0" />
+                  <div className="h-4 bg-white/10 rounded w-24 shrink-0" />
                 </div>
-                <div className="text-sm font-medium text-white/80 whitespace-nowrap">{g.title}</div>
-              </button>
-            ))}
+              ))
+            ) : (
+              grades.map((g) => (
+                <button
+                  key={g.id}
+                  onClick={() => setActive(g.id)}
+                  aria-current={active === g.id}
+                  className={`flex-shrink-0 flex flex-row items-center gap-3 text-left ${active === g.id ? "scale-105" : "opacity-80 hover:opacity-100 transition-opacity"}`}
+                >
+                  <div className={`w-14 h-14 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold ${g.progress === 100 ? "bg-green-500/20 text-green-400" : "bg-white/5 text-white/60"}`}>
+                    {g.title.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div className="text-sm font-medium text-white/80 whitespace-nowrap">{g.title}</div>
+                </button>
+              ))
+            )}
           </div>
         </div>
 

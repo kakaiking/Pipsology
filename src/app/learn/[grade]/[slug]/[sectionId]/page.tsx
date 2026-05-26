@@ -1,28 +1,9 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, BookOpen, Clock, Youtube, Sparkles, CheckCircle, Lightbulb } from "lucide-react";
-import { courseGrades, curricula } from "@/lib/data";
 import { generateInDepthContent } from "@/lib/lessonHelpers";
+import { prisma } from "@/lib/prisma";
 
-export function generateStaticParams() {
-    const params: { grade: string; slug: string; sectionId: string }[] = [];
-
-    courseGrades.forEach((grade) => {
-        const lessons = curricula[grade.id] || [];
-        
-        lessons.forEach((lesson: any) => {
-            const sections = lesson.content || [];
-            sections.forEach((section: any) => {
-                params.push({
-                    grade: grade.id,
-                    slug: lesson.slug,
-                    sectionId: section.id,
-                });
-            });
-        });
-    });
-
-    return params;
-}
+export const dynamic = "force-dynamic";
 
 const extractVideoId = (url?: string) => {
     if (!url) return null;
@@ -33,8 +14,21 @@ const extractVideoId = (url?: string) => {
 
 export default async function SectionPage({ params }: { params: Promise<{ grade: string, slug: string, sectionId: string }> }) {
     const { grade, slug, sectionId } = await params;
-    const currentGrade = courseGrades.find(g => g.id === grade);
-    const lessons = curricula[grade] || [];
+    const currentGrade = await prisma.grade.findUnique({
+        where: { id: grade }
+    });
+    
+    // Find all lessons for this grade
+    const lessons = await prisma.lesson.findMany({
+        where: { gradeId: grade },
+        orderBy: { createdAt: "asc" },
+        include: {
+            sections: {
+                orderBy: { order: "asc" }
+            }
+        }
+    });
+    
     const currentIndex = lessons.findIndex((l: any) => l.slug === slug);
     const currentLesson = lessons[currentIndex] as any;
 
@@ -47,7 +41,8 @@ export default async function SectionPage({ params }: { params: Promise<{ grade:
         );
     }
 
-    const sections = currentLesson.content || [];
+    const sections = currentLesson.sections || [];
+
     const sectionIndex = sections.findIndex((s: any) => s.id === sectionId);
     const currentSection = sections[sectionIndex];
 

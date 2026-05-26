@@ -76,6 +76,27 @@ export const ScrollytellingLesson: React.FC<ScrollytellingLessonProps> = ({ sect
         }));
     };
     
+    // Collapse any expanded section when clicking outside the expanded text container
+    useEffect(() => {
+        const hasExpanded = Object.values(expandedSections).some(Boolean);
+        if (!hasExpanded) return;
+
+        const handleOutsideClick = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            // Ignore if click is within the description panel or on the "read more" button
+            if (target.closest("[data-description-panel]") || target.closest("[data-read-more-btn]")) {
+                return;
+            }
+            // Collapse all expanded sections
+            setExpandedSections({});
+        };
+
+        document.addEventListener("click", handleOutsideClick);
+        return () => {
+            document.removeEventListener("click", handleOutsideClick);
+        };
+    }, [expandedSections]);
+    
     const containerRef = useRef<HTMLDivElement>(null);
 
     // Initializing mock likes count for each section
@@ -259,7 +280,7 @@ export const ScrollytellingLesson: React.FC<ScrollytellingLessonProps> = ({ sect
                                                     <img
                                                         src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
                                                         alt={section.title}
-                                                        className="absolute inset-0 w-full h-full object-cover z-5 opacity-40 animate-fade-in"
+                                                        className="absolute inset-0 w-full h-full object-cover z-5 opacity-100 animate-fade-in"
                                                     />
                                                 )}
                                                 <iframe
@@ -272,7 +293,7 @@ export const ScrollytellingLesson: React.FC<ScrollytellingLessonProps> = ({ sect
                                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                                     className={`w-full h-full object-cover pointer-events-none scale-[1.3] origin-center transition-opacity duration-300 ${
                                                         playingStates[section.id] !== false
-                                                            ? (isFullscreen ? "opacity-100" : "opacity-60") 
+                                                            ? "opacity-100" 
                                                             : "opacity-0 pointer-events-none"
                                                     }`}
                                                 ></iframe>
@@ -305,18 +326,17 @@ export const ScrollytellingLesson: React.FC<ScrollytellingLessonProps> = ({ sect
                                     </div>
                                 )}
 
-                                {/* Gradient Dark Overlay */}
-                                <div className={`absolute inset-0 transition-all duration-500 pointer-events-none z-10 ${
-                                    isFullscreen
-                                        ? "bg-transparent"
-                                        : expandedSections[section.id]
-                                            ? "bg-black/85 backdrop-blur-[3px]"
-                                            : "bg-gradient-to-t from-black/95 via-black/30 to-black/30"
-                                }`} />
+
 
                                 {/* Transparent touch/click shielding layer that sits on top of the background layer to swallow all interactions and prevent the iframe controls from ever being triggered */}
                                 <div 
-                                     onClick={() => togglePlay(section.id)}
+                                     onClick={() => {
+                                         if (expandedSections[section.id]) {
+                                             toggleExpandSection(section.id);
+                                         } else {
+                                             togglePlay(section.id);
+                                         }
+                                     }}
                                      className="absolute inset-0 w-full h-full z-15 pointer-events-auto bg-transparent cursor-pointer" 
                                  />
 
@@ -406,17 +426,26 @@ export const ScrollytellingLesson: React.FC<ScrollytellingLessonProps> = ({ sect
 
                                 {/* Bottom Details Panel */}
                                 {!isFullscreen && (
-                                    <div className="absolute left-8 right-28 bottom-8 z-20 text-left pointer-events-auto max-w-xl">
-                                        <h3 className="font-bold text-sm text-green-400 mb-1.5">
-                                            @pipsology_academy
-                                        </h3>
+                                    <div 
+                                        data-description-panel
+                                        className={`absolute left-0 bottom-0 pr-6 pl-8 z-20 text-left pointer-events-auto w-fit max-w-[440px] transition-all duration-300 ${
+                                            expandedSections[section.id] ? "pb-0" : "pb-[10px]"
+                                        }`}
+                                    >
+                                        {/* Seamless dark gradient anchored to the bottom-left corner with negative offset to bleed off edges and eliminate left/bottom gaps */}
+                                        <div className={`absolute -left-16 -bottom-16 right-0 top-0 transition-all duration-300 -z-10 pointer-events-none blur-md ${
+                                            expandedSections[section.id]
+                                                ? "bg-black/50 backdrop-blur-[3px]"
+                                                : "bg-gradient-to-tr from-black/50 via-black/15 to-transparent"
+                                        }`} />
+
                                         
                                         <h4 className="font-bold text-white text-lg md:text-xl leading-snug mb-2">
                                             {section.title}
                                         </h4>
                                         
                                         {/* Elegant scrollable text description panel */}
-                                        <div className="max-h-[22vh] overflow-y-auto pr-2 scrollbar-none mb-3 text-white/80 text-xs md:text-sm leading-relaxed space-y-2">
+                                        <div className="max-h-[22vh] overflow-y-auto pr-2 scrollbar-none mb-0 text-white/80 text-xs md:text-sm leading-relaxed space-y-2">
                                             {(() => {
                                                 const combinedText = section.text.join(" ");
                                                 const isLongText = combinedText.length > 100;
@@ -427,6 +456,7 @@ export const ScrollytellingLesson: React.FC<ScrollytellingLessonProps> = ({ sect
                                                         <p>
                                                             {combinedText.slice(0, 100)}...
                                                             <button 
+                                                                data-read-more-btn
                                                                 onClick={() => toggleExpandSection(section.id)}
                                                                 className="text-green-400 hover:text-green-300 font-semibold ml-1 focus:outline-none transition-colors"
                                                             >

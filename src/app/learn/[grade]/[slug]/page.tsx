@@ -1,31 +1,28 @@
 import Link from "next/link";
 import { CheckCircle, BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
-import { courseGrades, preschoolLessons, curricula } from "@/lib/data";
 import { ScrollytellingLesson, SectionContent } from "@/components/ScrollytellingLesson";
+import MarkCompleteButton from "@/components/MarkCompleteButton";
+import { prisma } from "@/lib/prisma";
 
-export function generateStaticParams() {
-    const params: { grade: string; slug: string }[] = [];
-
-    courseGrades.forEach((grade) => {
-        const lessons = curricula[grade.id] || [];
-        
-        lessons.forEach((lesson: any) => {
-            params.push({
-                grade: grade.id,
-                slug: lesson.slug,
-            });
-        });
-    });
-
-    return params;
-}
+export const dynamic = "force-dynamic";
 
 export default async function LessonPage({ params }: { params: Promise<{ grade: string, slug: string }> }) {
     const { grade, slug } = await params;
-    const currentGrade = courseGrades.find(g => g.id === grade);
+    const currentGrade = await prisma.grade.findUnique({
+        where: { id: grade }
+    });
     
-    // Find lessons for this grade
-    const lessons = curricula[grade] || [];
+    // Find all lessons for this grade to determine order, next, and previous lessons
+    const lessons = await prisma.lesson.findMany({
+        where: { gradeId: grade },
+        orderBy: { createdAt: "asc" },
+        include: {
+            sections: {
+                orderBy: { order: "asc" }
+            }
+        }
+    });
+    
     const currentIndex = lessons.findIndex((l: any) => l.slug === slug);
     const currentLesson = lessons[currentIndex] as any;
     
@@ -42,7 +39,8 @@ export default async function LessonPage({ params }: { params: Promise<{ grade: 
         }
     ];
 
-    const sections = (currentLesson as any)?.content || defaultSections;
+    const sections = currentLesson?.sections || defaultSections;
+
 
     return (
         <div className="pb-8 relative">
@@ -80,10 +78,7 @@ export default async function LessonPage({ params }: { params: Promise<{ grade: 
                         )}
                         
                         <div className="flex items-center gap-3">
-                            <button className="flex items-center gap-2 px-5 py-2.5 glass rounded-xl text-sm font-medium text-green-400 hover:bg-green-500/10 transition-all border border-green-500/20">
-                                <CheckCircle size={16} />
-                                Mark Complete
-                            </button>
+                            <MarkCompleteButton gradeId={grade} lessonSlug={slug} />
                         </div>
 
                         {nextLesson ? (

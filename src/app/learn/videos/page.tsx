@@ -401,9 +401,7 @@ export default function VideosPage() {
 
                                         {/* Bottom Details Panel */}
                                         <div className="absolute left-8 right-28 bottom-8 z-20 text-left pointer-events-auto max-w-2xl">
-                                            <h3 className="font-bold text-sm text-green-400 flex items-center gap-1.5 mb-1.5">
-                                                @pipsology_academy <span className="bg-green-500/20 text-green-300 text-[9px] px-2 py-0.5 rounded font-extrabold uppercase">PRO</span>
-                                            </h3>
+
                                             <h4 className="font-bold text-white text-lg md:text-xl leading-snug mb-1.5">
                                                 {video.title}
                                             </h4>

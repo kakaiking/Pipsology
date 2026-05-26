@@ -1,0 +1,116 @@
+datasource db {
+  provider  = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ==========================================
+// 1. USER ACCOUNTS & CORE PROFILE
+// ==========================================
+model User {
+  id            String    @id @default(cuid())
+  username      String    @unique
+  email         String    @unique
+  passwordHash  String?   // Nullable to support standard Credentials + OAuth (Google/Apple)
+  avatar        String?   // Custom avatar URL or generic initials
+  tier          String    @default("FREE") // FREE or PREMIUM subscription level
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Streaks, XP & Leveling Metrics
+  totalXP       Int       @default(0)
+  currentStreak Int       @default(0)
+  lastActiveAt  DateTime? // Timestamp to calculate if the study streak is maintained day-to-day
+
+  // Relationships
+  completedLessons CompletedLesson[]
+  earnedBadges     UserBadge[]
+  dailyMissions    UserMission[]
+}
+
+// ==========================================
+// 2. LEARNING & LESSON PROGRESSION
+// ==========================================
+model CompletedLesson {
+  id          String   @id @default(cuid())
+  userId      String
+  gradeId     String   // 'preschool', 'kindergarten', 'elementary'
+  lessonSlug  String   // e.g. 'what-is-forex'
+  completedAt DateTime @default(now())
+
+  // Connects to User model
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // A user can only complete a specific lesson once
+  @@unique([userId, lessonSlug])
+}
+
+// ==========================================
+// 3. STREAKS & ACHIEVEMENTS SYSTEM
+// ==========================================
+model UserBadge {
+  id        String   @id @default(cuid())
+  userId    String
+  badgeId   String   // Matches achievements data (e.g., 'first-steps', 'streak-7')
+  earnedAt  DateTime @default(now())
+
+  // Connects to User model
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // A user can only earn a unique badge once
+  @@unique([userId, badgeId])
+}
+
+model UserMission {
+  id          String   @id @default(cuid())
+  userId      String
+  missionId   String   // e.g., 'daily-lesson', 'daily-journal-comment'
+  isCompleted Boolean  @default(false)
+  resetAt     DateTime // When the daily mission is scheduled to reset
+
+  // Connects to User model
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, missionId])
+}
+
+model Grade {
+  id        String   @id @default(cuid())
+  title     String   @unique
+  subtitle  String?
+  color     String   @default("#22c55e")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lessons   Lesson[]
+}
+
+model Lesson {
+  id        String          @id @default(cuid())
+  slug      String          @unique
+  title     String
+  gradeId   String          
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  // Relationships
+  grade     Grade           @relation(fields: [gradeId], references: [id], onDelete: Cascade)
+  sections  LessonSection[]
+}
+
+model LessonSection {
+  id         String   @id @default(cuid())
+  lessonId   String
+  title      String
+  text       String[] // Supported on PostgreSQL
+  visualType String   @default("default")
+  videoUrl   String?
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  lesson     Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+}
+

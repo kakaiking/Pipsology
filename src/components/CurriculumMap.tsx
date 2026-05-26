@@ -1,29 +1,13 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { courseGrades, preschoolLessons } from '@/lib/data';
+import { useState, useEffect } from 'react';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type NodeState = 'completed' | 'active' | 'available' | 'locked';
 
-// ── Map layout (900 × 480 viewBox) ────────────────────────────────────────────
-// Preschool starts top-left, path winds down to Graduation at bottom-left
-const NODES = [
-    { x: 148, y: 62 }, // Preschool
-    { x: 362, y: 132 }, // Kindergarten
-    { x: 618, y: 160 }, // Elementary
-];
-
-// Full trail (top-left → bottom-left, reversed from before)
-const TRAIL = 'M 148,62 C 180,84 258,124 362,132 C 448,138 498,160 618,160';
-
-// Green completed trail: Preschool → Kindergarten → (into) Elementary
-const TRAIL_DONE = 'M 148,62 C 180,84 258,124 362,132 C 448,138 498,160 618,160';
-
-// Label above/below each node: top nodes (small y) → label BELOW; bottom nodes → label ABOVE
-const LABEL_ABOVE = [false, false, false];
 const R = 34; // node radius
+const ICONS = ['📗', '📘', '📙', '📓', '📕', '📒', '📔'];
 
 // ── Decorative candlestick data ───────────────────────────────────────────────
 interface Candle { bull: boolean; h: number; wt: number; wb: number }
@@ -64,39 +48,105 @@ function CandleChart({ cx, cy, s, candles }: CandleGroup) {
     );
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function getState(g: typeof courseGrades[0], i: number): NodeState {
-    if (g.progress === 100) return 'completed';
-    if (g.progress > 0) return 'active';
-    if (i === 0 || courseGrades[i - 1].progress === 100) return 'available';
-    return 'locked';
-}
-
-function getHref(g: typeof courseGrades[0]): string {
-    if (g.id === 'preschool') {
-        const next = preschoolLessons.find(l => !l.done) ?? preschoolLessons[preschoolLessons.length - 1];
-        return `/learn/preschool/${next.slug}`;
-    }
-    return `/learn/${g.id}`;
-}
-
-const ICONS = ['📗', '📘', '📙'];
-const LABELS = ['Beginner', 'Novice', 'Intermediate'];
-
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function CurriculumMap() {
     const router = useRouter();
     const [tooltip, setTooltip] = useState<string | null>(null);
     const [hovered, setHovered] = useState<string | null>(null);
+    const [grades, setGrades] = useState<any[]>([]);
+    const [completedLessons, setCompletedLessons] = useState<string[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    function handleClick(g: typeof courseGrades[0], i: number) {
+    useEffect(() => {
+        async function fetchGradesAndProgress() {
+            try {
+                const [gradesRes, progressRes] = await Promise.all([
+                    fetch("/api/grades"),
+                    fetch("/api/user/progress")
+                ]);
+
+                let fetchedGrades: any[] = [];
+                let progressData: any = {};
+
+                if (gradesRes.ok) {
+                    const gradesData = await gradesRes.json();
+                    fetchedGrades = gradesData.grades || [];
+                }
+
+                if (progressRes.ok) {
+                    progressData = await progressRes.json();
+                    setCompletedLessons(progressData.completedLessons || []);
+                }
+
+                // Map progress to grades
+                fetchedGrades = fetchedGrades.map((g: any) => ({
+                    ...g,
+                    progress: (progressData.progress && progressData.progress[g.id]) ?? 0
+                }));
+
+                setGrades(fetchedGrades);
+            } catch (err) {
+                console.error("Failed to fetch curriculum map data:", err);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchGradesAndProgress();
+    }, []);
+
+    // Helper to determine node state
+    function getState(g: any, i: number): NodeState {
+        if (g.progress === 100) return 'completed';
+        if (g.progress > 0) return 'active';
+        if (i === 0 || grades[i - 1].progress === 100) return 'available';
+        return 'locked';
+    }
+
+    // Dynamic coordinates for SVG
+    const nodesCount = grades.length;
+    const startX = 160;
+    const endX = 740;
+    const width = endX - startX;
+    
+    const nodeCoords = grades.map((_, idx) => {
+        const stepX = nodesCount > 1 ? width / (nodesCount - 1) : 0;
+        const x = nodesCount > 1 ? startX + idx * stepX : 450;
+        const y = 240 + Math.sin((idx * Math.PI) / 2.2) * 120;
+        return { x, y };
+    });
+
+    // Generate path string for dynamic SVG Bezier curves
+    let trailPath = "";
+    if (nodeCoords.length > 0) {
+        trailPath = `M ${nodeCoords[0].x},${nodeCoords[0].y}`;
+        for (let i = 1; i < nodeCoords.length; i++) {
+            const prev = nodeCoords[i - 1];
+            const curr = nodeCoords[i];
+            const cp1x = prev.x + (curr.x - prev.x) / 2;
+            const cp1y = prev.y;
+            const cp2x = prev.x + (curr.x - prev.x) / 2;
+            const cp2y = curr.y;
+            trailPath += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${curr.x},${curr.y}`;
+        }
+    }
+
+    function handleClick(g: any, i: number) {
         const state = getState(g, i);
         if (state === 'locked') {
-            setTooltip(`Complete ${LABELS[i - 1]} first to unlock this grade`);
+            setTooltip(`Complete ${grades[i - 1].title} first to unlock this level`);
             setTimeout(() => setTooltip(null), 2800);
             return;
         }
-        router.push(getHref(g));
+        
+        // Find next incomplete lesson, or go to level page if none/completed
+        if (g.lessons && g.lessons.length > 0) {
+            const next = g.lessons.find((l: any) => !completedLessons.includes(l.slug)) ?? g.lessons[g.lessons.length - 1];
+            if (next) {
+                router.push(`/learn/${g.id}/${next.slug}`);
+                return;
+            }
+        }
+        router.push(`/learn/${g.id}`);
     }
 
     return (
@@ -127,9 +177,8 @@ export default function CurriculumMap() {
 
             {/* Header */}
             <div className="text-center mb-8">
-
                 <h2 className="text-2xl md:text-3xl font-bold font-display text-white">Your Learning Journey</h2>
-                <p className="text-white/40 text-sm mt-1">Complete each grade to unlock the next level</p>
+                <p className="text-white/40 text-sm mt-1">Complete each grade level to unlock the next dynamic module</p>
             </div>
 
             {/* Map */}
@@ -140,168 +189,191 @@ export default function CurriculumMap() {
                     </div>
                 )}
 
-                <svg viewBox="0 0 900 480" className="w-full h-auto" style={{ maxHeight: 520 }}>
-                    <defs>
-                        <filter id="glow-g" x="-60%" y="-60%" width="220%" height="220%">
-                            <feGaussianBlur stdDeviation="5" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
-                        </filter>
-                        <filter id="glow-a" x="-60%" y="-60%" width="220%" height="220%">
-                            <feGaussianBlur stdDeviation="7" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
-                        </filter>
-                        <linearGradient id="g-done" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stopColor="#10b981" /><stop offset="100%" stopColor="#059669" />
-                        </linearGradient>
-                        <linearGradient id="g-active" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stopColor="#f59e0b" /><stop offset="100%" stopColor="#d97706" />
-                        </linearGradient>
-                        <linearGradient id="g-locked" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stopColor="#1f2937" /><stop offset="100%" stopColor="#111827" />
-                        </linearGradient>
-                        <linearGradient id="g-grad" x1="0" y1="0" x2="1" y2="1">
-                            <stop offset="0%" stopColor="#8b5cf6" /><stop offset="100%" stopColor="#6d28d9" />
-                        </linearGradient>
-                    </defs>
+                {loading ? (
+                    <div className="flex flex-col items-center justify-center min-h-[300px]">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mb-2"></div>
+                        <p className="text-white/30 text-sm">Building custom map...</p>
+                    </div>
+                ) : grades.length === 0 ? (
+                    <div className="text-center py-16 border border-white/10 rounded-3xl bg-white/[0.01]">
+                        <p className="text-white/40 text-sm">No curriculum groups have been configured by the admin yet.</p>
+                    </div>
+                ) : (
+                    <svg viewBox="0 0 900 480" className="w-full h-auto" style={{ maxHeight: 520 }}>
+                        <defs>
+                            <filter id="glow-g" x="-60%" y="-60%" width="220%" height="220%">
+                                <feGaussianBlur stdDeviation="5" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+                            </filter>
+                            <filter id="glow-a" x="-60%" y="-60%" width="220%" height="220%">
+                                <feGaussianBlur stdDeviation="7" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+                            </filter>
+                            <linearGradient id="g-done" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stopColor="#10b981" /><stop offset="100%" stopColor="#059669" />
+                            </linearGradient>
+                            <linearGradient id="g-active" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stopColor="#f59e0b" /><stop offset="100%" stopColor="#d97706" />
+                            </linearGradient>
+                            <linearGradient id="g-locked" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stopColor="#1f2937" /><stop offset="100%" stopColor="#111827" />
+                            </linearGradient>
+                            <linearGradient id="g-grad" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stopColor="#8b5cf6" /><stop offset="100%" stopColor="#6d28d9" />
+                            </linearGradient>
+                        </defs>
 
-                    {/* Background grid */}
-                    <g opacity="0.035" stroke="#22c55e" strokeWidth="0.5">
-                        {[0, 1, 2, 3, 4, 5].map(i => <line key={`h${i}`} x1="0" y1={i * 96} x2="900" y2={i * 96} />)}
-                        {[0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => <line key={`v${i}`} x1={i * 112} y1="0" x2={i * 112} y2="480" />)}
-                    </g>
-
-                    {/* Soft background trend */}
-                    <path d="M 0,460 Q 450,290 900,90" fill="none" stroke="#22c55e" strokeWidth="1" opacity="0.05" strokeDasharray="5 10" />
-
-                    {/* Candlestick decorations */}
-                    {CANDLES.map((g, i) => <CandleChart key={i} {...g} />)}
-
-                    {/* Floating coin accents */}
-                    {[{ x: 52, y: 350 }, { x: 856, y: 118 }, { x: 432, y: 232 }].map((c, i) => (
-                        <g key={i} opacity="0.18" className="float-el" style={{ animationDelay: `${i * 0.9}s` }}>
-                            <circle cx={c.x} cy={c.y} r="11" fill="#f59e0b" />
-                            <text x={c.x} y={c.y + 5} textAnchor="middle" fontSize="11" fill="#000" fontWeight="bold">$</text>
+                        {/* Background grid */}
+                        <g opacity="0.035" stroke="#22c55e" strokeWidth="0.5">
+                            {[0, 1, 2, 3, 4, 5].map(i => <line key={`h${i}`} x1="0" y1={i * 96} x2="900" y2={i * 96} />)}
+                            {[0, 1, 2, 3, 4, 5, 6, 7, 8].map(i => <line key={`v${i}`} x1={i * 112} y1="0" x2={i * 112} y2="480" />)}
                         </g>
-                    ))}
 
-                    {/* Trail — grey remaining */}
-                    <path d={TRAIL} fill="none" stroke="#0f1f14" strokeWidth="12" strokeLinecap="round" />
-                    <path d={TRAIL} fill="none" stroke="#1f3124" strokeWidth="8" strokeLinecap="round" className="trail-rem" />
+                        {/* Soft background trend */}
+                        <path d="M 0,460 Q 450,290 900,90" fill="none" stroke="#22c55e" strokeWidth="1" opacity="0.05" strokeDasharray="5 10" />
 
-                    {/* Trail — green completed (animated) */}
-                    <path d={TRAIL_DONE} fill="none" stroke="#10b981" strokeWidth="8" strokeLinecap="round" className="trail-done" opacity="0.9" />
+                        {/* Candlestick decorations */}
+                        {CANDLES.map((g, i) => <CandleChart key={i} {...g} />)}
 
-                    {/* Trail dots on completed section (top-left → elementary) */}
-                    {[{ x: 220, y: 88 }, { x: 290, y: 114 }, { x: 450, y: 144 }, { x: 535, y: 157 }, { x: 578, y: 160 }].map((p, i) => (
-                        <circle key={i} cx={p.x} cy={p.y} r="3.5" fill="#10b981" opacity="0.55" />
-                    ))}
-
-                    {/* Grade Nodes */}
-                    {courseGrades.map((grade, idx) => {
-                        const nd = NODES[idx];
-                        const state = getState(grade, idx);
-                        const above = LABEL_ABOVE[idx];
-                        const isHov = hovered === grade.id;
-                        const isLast = idx === 2;
-
-                        // ── visual config per state
-                        const fill = state === 'completed' ? 'url(#g-done)'
-                            : state === 'active' ? 'url(#g-active)'
-                                : isLast && state !== 'locked' ? 'url(#g-grad)'
-                                    : 'url(#g-locked)';
-                        const stroke = state === 'completed' ? '#34d399'
-                            : state === 'active' ? '#fbbf24'
-                                : '#374151';
-                        const filt = state === 'completed' ? 'url(#glow-g)'
-                            : state === 'active' ? 'url(#glow-a)'
-                                : undefined;
-
-                        // label/star positions
-                        const starOff = above ? nd.y - R - 18 : nd.y + R + 18;
-                        const labelOff = above ? nd.y - R - 38 : nd.y + R + 36;
-                        const pillOff = above ? nd.y - R - 56 : nd.y + R + 52;
-
-                        // progress arc
-                        const arc = 2 * Math.PI * (R - 6);
-                        const dash = `${((grade.progress / 100) * arc).toFixed(1)} ${arc.toFixed(1)}`;
-
-                        return (
-                            <g
-                                key={grade.id}
-                                onClick={() => handleClick(grade, idx)}
-                                onMouseEnter={() => setHovered(grade.id)}
-                                onMouseLeave={() => setHovered(null)}
-                                style={{ cursor: state === 'locked' ? 'not-allowed' : 'pointer' }}
-                                transform={isHov && state !== 'locked' ? `translate(${nd.x},${nd.y}) scale(1.08) translate(${-nd.x},${-nd.y})` : undefined}
-                            >
-                                {/* Pulse ring (active) */}
-                                {state === 'active' && (
-                                    <circle cx={nd.x} cy={nd.y} r={R + 10} fill="none" stroke="#f59e0b" strokeWidth="1.5" opacity="0.45" className="pulse-ring" />
-                                )}
-                                {/* Static ring (completed) */}
-                                {state === 'completed' && (
-                                    <circle cx={nd.x} cy={nd.y} r={R + 8} fill="none" stroke="#10b981" strokeWidth="1" opacity="0.25" />
-                                )}
-
-                                {/* Drop shadow */}
-                                <circle cx={nd.x + 3} cy={nd.y + 4} r={R} fill="rgba(0,0,0,0.45)" />
-
-                                {/* Main circle */}
-                                <circle cx={nd.x} cy={nd.y} r={R} fill={fill} stroke={stroke} strokeWidth="2.5"
-                                    filter={filt}
-                                    opacity={state === 'locked' ? 0.45 : 1}
-                                    className={state === 'active' ? 'active-node' : undefined}
-                                />
-
-                                {/* Progress arc */}
-                                {state === 'active' && (
-                                    <circle cx={nd.x} cy={nd.y} r={R - 6} fill="none" stroke="rgba(255,255,255,0.25)"
-                                        strokeWidth="4" strokeDasharray={dash} strokeLinecap="round"
-                                        transform={`rotate(-90 ${nd.x} ${nd.y})`}
-                                    />
-                                )}
-
-                                {/* Icon / symbol */}
-                                <text x={nd.x} y={nd.y + 9} textAnchor="middle" fontSize={state === 'locked' ? '20' : '22'}>
-                                    {state === 'locked' ? '🔒' : state === 'completed' ? '✅' : ICONS[idx]}
-                                </text>
-
-                                {/* Stars (completed) / progress % (active) */}
-                                {state === 'completed' && (
-                                    <text x={nd.x} y={starOff + 4} textAnchor="middle" fontSize="11">⭐⭐⭐</text>
-                                )}
-                                {state === 'active' && (
-                                    <text x={nd.x} y={starOff + 4} textAnchor="middle" fontSize="10" fill="#fbbf24" fontWeight="700">
-                                        {grade.progress}%
-                                    </text>
-                                )}
-
-                                {/* Grade label */}
-                                <text x={nd.x} y={labelOff + 4} textAnchor="middle" fontSize="11"
-                                    fill={state === 'locked' ? '#4b5563' : state === 'completed' ? '#d1fae5' : '#fef3c7'}
-                                    fontWeight="700" fontFamily="system-ui,sans-serif">
-                                    {LABELS[idx]}
-                                </text>
-
-                                {/* "Continue" pill for active */}
-                                {state === 'active' && (
-                                    <g>
-                                        <rect x={nd.x - 40} y={pillOff - 2} width="80" height="18" rx="9" fill="#f59e0b" opacity="0.92" />
-                                        <text x={nd.x} y={pillOff + 10} textAnchor="middle" fontSize="9" fill="#000" fontWeight="800">
-                                            CONTINUE →
-                                        </text>
-                                    </g>
-                                )}
-
-                                {/* Number badge */}
-                                <circle cx={nd.x + R - 6} cy={nd.y - R + 6} r="12" fill="#0a0f0d"
-                                    stroke={state === 'locked' ? '#374151' : stroke} strokeWidth="1.5" />
-                                <text x={nd.x + R - 6} y={nd.y - R + 10} textAnchor="middle" fontSize="9"
-                                    fill={state === 'locked' ? '#4b5563' : stroke} fontWeight="800">
-                                    {idx + 1}
-                                </text>
+                        {/* Floating coin accents */}
+                        {[{ x: 52, y: 350 }, { x: 856, y: 118 }, { x: 432, y: 232 }].map((c, i) => (
+                            <g key={i} opacity="0.18" className="float-el" style={{ animationDelay: `${i * 0.9}s` }}>
+                                <circle cx={c.x} cy={c.y} r="11" fill="#f59e0b" />
+                                <text x={c.x} y={c.y + 5} textAnchor="middle" fontSize="11" fill="#000" fontWeight="bold">$</text>
                             </g>
-                        );
-                    })}
-                </svg>
+                        ))}
+
+                        {/* Trail — grey remaining background trail */}
+                        {trailPath && (
+                            <>
+                                <path d={trailPath} fill="none" stroke="#0f1f14" strokeWidth="12" strokeLinecap="round" />
+                                <path d={trailPath} fill="none" stroke="#1f3124" strokeWidth="8" strokeLinecap="round" className="trail-rem" />
+                            </>
+                        )}
+
+                        {/* Trail — green completed dynamically segment-by-segment */}
+                        {grades.map((grade, idx) => {
+                            if (idx === 0) return null;
+                            const prev = nodeCoords[idx - 1];
+                            const curr = nodeCoords[idx];
+                            if (grades[idx - 1].progress !== 100) return null;
+
+                            const segmentPath = `M ${prev.x},${prev.y} C ${prev.x + (curr.x - prev.x) / 2},${prev.y} ${prev.x + (curr.x - prev.x) / 2},${curr.y} ${curr.x},${curr.y}`;
+                            return (
+                                <path key={`trail-done-${idx}`} d={segmentPath} fill="none" stroke="#10b981" strokeWidth="8" strokeLinecap="round" className="trail-done" opacity="0.9" />
+                            );
+                        })}
+
+                        {/* Dynamic Grade Nodes */}
+                        {grades.map((grade, idx) => {
+                            const nd = nodeCoords[idx];
+                            const state = getState(grade, idx);
+                            const labelBelow = nd.y < 240;
+                            const isHov = hovered === grade.id;
+                            const isLast = idx === grades.length - 1;
+
+                            // visual config per state
+                            const fill = state === 'completed' ? 'url(#g-done)'
+                                : state === 'active' ? 'url(#g-active)'
+                                    : isLast && state !== 'locked' ? 'url(#g-grad)'
+                                        : 'url(#g-locked)';
+                            
+                            const themeColor = grade.color || "#22c55e";
+                            const stroke = state === 'completed' ? '#34d399'
+                                : state === 'active' ? '#fbbf24'
+                                    : themeColor;
+                            
+                            const filt = state === 'completed' ? 'url(#glow-g)'
+                                : state === 'active' ? 'url(#glow-a)'
+                                    : undefined;
+
+                            // Label positions
+                            const starOff = labelBelow ? nd.y + R + 18 : nd.y - R - 18;
+                            const labelOff = labelBelow ? nd.y + R + 36 : nd.y - R - 38;
+                            const pillOff = labelBelow ? nd.y + R + 52 : nd.y - R - 56;
+
+                            // progress arc
+                            const arc = 2 * Math.PI * (R - 6);
+                            const dash = `${((grade.progress / 100) * arc).toFixed(1)} ${arc.toFixed(1)}`;
+
+                            return (
+                                <g
+                                    key={grade.id}
+                                    onClick={() => handleClick(grade, idx)}
+                                    onMouseEnter={() => setHovered(grade.id)}
+                                    onMouseLeave={() => setHovered(null)}
+                                    style={{ cursor: state === 'locked' ? 'not-allowed' : 'pointer' }}
+                                    transform={isHov && state !== 'locked' ? `translate(${nd.x},${nd.y}) scale(1.08) translate(${-nd.x},${-nd.y})` : undefined}
+                                >
+                                    {/* Pulse ring (active) */}
+                                    {state === 'active' && (
+                                        <circle cx={nd.x} cy={nd.y} r={R + 10} fill="none" stroke="#f59e0b" strokeWidth="1.5" opacity="0.45" className="pulse-ring" />
+                                    )}
+                                    {/* Static ring (completed) */}
+                                    {state === 'completed' && (
+                                        <circle cx={nd.x} cy={nd.y} r={R + 8} fill="none" stroke="#10b981" strokeWidth="1" opacity="0.25" />
+                                    )}
+
+                                    {/* Drop shadow */}
+                                    <circle cx={nd.x + 3} cy={nd.y + 4} r={R} fill="rgba(0,0,0,0.45)" />
+
+                                    {/* Main circle */}
+                                    <circle cx={nd.x} cy={nd.y} r={R} fill={fill} stroke={stroke} strokeWidth="2.5"
+                                        filter={filt}
+                                        opacity={state === 'locked' ? 0.45 : 1}
+                                        className={state === 'active' ? 'active-node' : undefined}
+                                    />
+
+                                    {/* Progress arc */}
+                                    {state === 'active' && (
+                                        <circle cx={nd.x} cy={nd.y} r={R - 6} fill="none" stroke="rgba(255,255,255,0.25)"
+                                            strokeWidth="4" strokeDasharray={dash} strokeLinecap="round"
+                                            transform={`rotate(-90 ${nd.x} ${nd.y})`}
+                                        />
+                                    )}
+
+                                    {/* Icon / symbol */}
+                                    <text x={nd.x} y={nd.y + 9} textAnchor="middle" fontSize={state === 'locked' ? '20' : '22'}>
+                                        {state === 'locked' ? '🔒' : state === 'completed' ? '✅' : ICONS[idx % ICONS.length]}
+                                    </text>
+
+                                    {/* Stars (completed) / progress % (active) */}
+                                    {state === 'completed' && (
+                                        <text x={nd.x} y={starOff + 4} textAnchor="middle" fontSize="11">⭐⭐⭐</text>
+                                    )}
+                                    {state === 'active' && (
+                                        <text x={nd.x} y={starOff + 4} textAnchor="middle" fontSize="10" fill="#fbbf24" fontWeight="700">
+                                            {grade.progress}%
+                                        </text>
+                                    )}
+
+                                    {/* Grade label */}
+                                    <text x={nd.x} y={labelOff + 4} textAnchor="middle" fontSize="11"
+                                        fill={state === 'locked' ? '#4b5563' : state === 'completed' ? '#d1fae5' : '#fef3c7'}
+                                        fontWeight="700" fontFamily="system-ui,sans-serif">
+                                        {grade.title}
+                                    </text>
+
+                                    {/* "Continue" pill for active */}
+                                    {state === 'active' && (
+                                        <g>
+                                            <rect x={nd.x - 40} y={pillOff - 2} width="80" height="18" rx="9" fill="#f59e0b" opacity="0.92" />
+                                            <text x={nd.x} y={pillOff + 10} textAnchor="middle" fontSize="9" fill="#000" fontWeight="800">
+                                                CONTINUE →
+                                            </text>
+                                        </g>
+                                    )}
+
+                                    {/* Number badge */}
+                                    <circle cx={nd.x + R - 6} cy={nd.y - R + 6} r="12" fill="#0a0f0d"
+                                        stroke={state === 'locked' ? '#374151' : stroke} strokeWidth="1.5" />
+                                    <text x={nd.x + R - 6} y={nd.y - R + 10} textAnchor="middle" fontSize="9"
+                                        fill={state === 'locked' ? '#4b5563' : stroke} fontWeight="800">
+                                        {idx + 1}
+                                    </text>
+                                </g>
+                            );
+                        })}
+                    </svg>
+                )}
             </div>
 
             {/* Legend */}
@@ -319,5 +391,3 @@ export default function CurriculumMap() {
         </section>
     );
 }
-
-

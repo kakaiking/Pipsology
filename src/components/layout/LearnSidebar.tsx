@@ -8,9 +8,44 @@ import { courseGrades, tradingVideos } from "@/lib/data";
 
 export function LearnSidebar({ isCollapsed, onToggle }: { isCollapsed: boolean; onToggle: () => void }) {
     const pathname = usePathname();
+    const [grades, setGrades] = useState<any[]>([]);
 
     // Determine active grade from pathname
-    const activeGradeId = pathname.split("/").filter(Boolean)[1] || "preschool";
+    const activeGradeId = pathname.split("/").filter(Boolean)[1] || "";
+
+    useEffect(() => {
+        async function fetchGradesAndProgress() {
+            try {
+                const [gradesRes, progressRes] = await Promise.all([
+                    fetch("/api/grades"),
+                    fetch("/api/user/progress")
+                ]);
+
+                let fetchedGrades: any[] = [];
+                let progressData: any = {};
+
+                if (gradesRes.ok) {
+                    const gradesData = await gradesRes.json();
+                    fetchedGrades = gradesData.grades || [];
+                }
+
+                if (progressRes.ok) {
+                    progressData = await progressRes.json();
+                }
+
+                // Map progress to each grade
+                fetchedGrades = fetchedGrades.map((g: any) => ({
+                    ...g,
+                    progress: (progressData.progress && progressData.progress[g.id]) ?? 0
+                }));
+
+                setGrades(fetchedGrades);
+            } catch (err) {
+                console.error("Failed to fetch dynamic grades and progress in LearnSidebar:", err);
+            }
+        }
+        fetchGradesAndProgress();
+    }, [pathname]);
 
     return (
         <aside
@@ -29,7 +64,7 @@ export function LearnSidebar({ isCollapsed, onToggle }: { isCollapsed: boolean; 
                 </div>
 
                 <div className="flex-1 space-y-2 overflow-y-auto no-scrollbar">
-                    {courseGrades.map((grade) => {
+                    {grades.map((grade) => {
                         const isActive = activeGradeId === grade.id;
                         return (
                             <Link
@@ -89,10 +124,6 @@ export function LearnSidebar({ isCollapsed, onToggle }: { isCollapsed: boolean; 
                     </div>
                 </div>
             </div>
-
-            {/* Sub-toggle or visual indicator for the vertical line if needed, but border-r already does that */}
         </aside>
     );
 }
-
-

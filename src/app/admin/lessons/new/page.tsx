@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { 
   Save, 
   BookOpen, 
@@ -10,18 +10,69 @@ import {
   Link as LinkIcon, 
   GraduationCap, 
   ChevronDown, 
+  ChevronRight,
   Trash2,
-  ArrowLeft
+  ArrowLeft,
+  Video,
+  Settings
 } from "lucide-react";
-import { courseGrades } from "@/lib/data";
+import { useFeedback } from "@/components/admin/FeedbackProvider";
+
+const getYouTubeId = (url?: string) => {
+  if (!url) return null;
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
+};
 
 export default function NewLessonPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center py-20 bg-white/5 border border-white/10 rounded-2xl">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-500 mb-4"></div>
+        <p className="text-white/50 text-sm">Loading lesson creator...</p>
+      </div>
+    }>
+      <NewLessonForm />
+    </Suspense>
+  );
+}
+
+function NewLessonForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const gradeIdParam = searchParams.get("gradeId");
+  const { showSuccess, showError } = useFeedback();
 
   const [title, setTitle] = useState("");
   const [grade, setGrade] = useState("");
   const [slug, setSlug] = useState("");
   const [content, setContent] = useState<any[]>([]);
+  const [grades, setGrades] = useState<any[]>([]);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  useEffect(() => {
+    async function fetchGrades() {
+      try {
+        const res = await fetch("/api/admin/grades");
+        if (res.ok) {
+          const data = await res.json();
+          const fetchedGrades = data.grades || [];
+          setGrades(fetchedGrades);
+          
+          if (gradeIdParam) {
+            const gradeExists = fetchedGrades.some((g: any) => g.id === gradeIdParam);
+            if (gradeExists) {
+              setGrade(gradeIdParam);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch grades:", err);
+      }
+    }
+    fetchGrades();
+  }, [gradeIdParam]);
 
   useEffect(() => {
     if (title) {
@@ -34,7 +85,8 @@ export default function NewLessonPage() {
       id: `block-${Date.now()}`,
       title: "",
       text: [""],
-      visualType: "default"
+      visualType: "default",
+      videoUrl: ""
     }]);
   };
 
@@ -52,14 +104,37 @@ export default function NewLessonPage() {
     setContent(content.filter((_, i) => i !== index));
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !grade || !slug) return;
 
-    console.log("Creating new lesson:", { title, grade, slug, content });
-    alert("Lesson created successfully!");
-    router.push("/admin/lessons");
+    try {
+      const res = await fetch("/api/admin/lessons", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          title,
+          gradeId: grade,
+          slug,
+          content
+        })
+      });
+
+      if (res.ok) {
+        showSuccess("Lesson created successfully!");
+        router.push("/admin/lessons");
+      } else {
+        const err = await res.json();
+        showError(`Error: ${err.message || "Failed to create lesson"}`);
+      }
+    } catch (error) {
+      console.error("Error creating lesson:", error);
+      showError("An unexpected error occurred.");
+    }
   };
+
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-20">
@@ -90,8 +165,8 @@ export default function NewLessonPage() {
             onClick={handleSave}
             className="flex items-center gap-2 px-8 py-3 bg-green-500 hover:bg-green-400 text-black font-bold rounded-xl transition-all shadow-[0_0_20px_rgba(34,197,94,0.3)] active:scale-95"
           >
-            <Plus size={20} />
-            Create Lesson
+            <Save size={20} />
+            Save
           </button>
         </div>
       </div>
@@ -137,7 +212,7 @@ export default function NewLessonPage() {
                     className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-10 text-white appearance-none focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all cursor-pointer"
                   >
                     <option value="" disabled>Select a grade</option>
-                    {courseGrades.map((g) => (
+                    {grades.map((g) => (
                       <option key={g.id} value={g.id} className="bg-[#0d1411]">
                         {g.title}
                       </option>
@@ -150,21 +225,41 @@ export default function NewLessonPage() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-white/70 mb-2">URL Slug</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <LinkIcon size={18} className="text-white/40" />
+            {/* Advanced / SEO Settings Accordion */}
+            <div className="border-t border-white/5 pt-6 mt-4">
+              <button
+                type="button"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="flex items-center gap-2 text-sm text-green-400 hover:text-green-300 font-bold transition-all focus:outline-none bg-white/5 hover:bg-white/10 px-4 py-2 rounded-xl border border-white/5"
+              >
+                <Settings size={16} />
+                <span>{showAdvanced ? "Hide Advanced / SEO Settings" : "Show Advanced / SEO Settings"}</span>
+                {showAdvanced ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+              </button>
+
+              {showAdvanced && (
+                <div className="mt-4 p-6 bg-black/20 rounded-2xl border border-white/5 space-y-4 transition-all duration-300 ease-in-out">
+                  <div>
+                    <label className="block text-sm font-medium text-white/70 mb-2">URL Slug</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <LinkIcon size={18} className="text-white/40" />
+                      </div>
+                      <input
+                        type="text"
+                        required
+                        value={slug}
+                        onChange={(e) => setSlug(e.target.value)}
+                        placeholder="understanding-pip-calculations"
+                        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all font-mono text-sm"
+                      />
+                    </div>
+                    <p className="text-xs text-white/40 mt-2 pl-1">
+                      Customize the unique URL path for this lesson. Leave as-is to use the automatically generated slug.
+                    </p>
+                  </div>
                 </div>
-                <input
-                  type="text"
-                  required
-                  value={slug}
-                  onChange={(e) => setSlug(e.target.value)}
-                  placeholder="understanding-pip-calculations"
-                  className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all font-mono text-sm"
-                />
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -226,6 +321,46 @@ export default function NewLessonPage() {
                       rows={5}
                       className="w-full bg-black/40 border border-white/10 rounded-xl py-4 px-4 text-white focus:outline-none focus:ring-2 focus:ring-green-500/50 transition-all resize-none"
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-white/30 uppercase tracking-wider mb-2">YouTube Video Link</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Video size={18} className="text-white/40" />
+                      </div>
+                      <input
+                        type="text"
+                        value={block.videoUrl || ""}
+                        onChange={(e) => updateContentBlock(index, "videoUrl", e.target.value)}
+                        placeholder="e.g., https://www.youtube.com/watch?v=..."
+                        className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500 transition-all"
+                      />
+                    </div>
+
+                    {block.videoUrl && getYouTubeId(block.videoUrl) && (
+                      <div className="mt-3 p-3 bg-black/60 border border-white/5 rounded-2xl flex items-center gap-4 transition-all duration-300 ease-in-out">
+                        <div className="relative w-36 aspect-video rounded-xl overflow-hidden border border-white/10 flex-shrink-0 bg-[#0d1411]">
+                          <img
+                            src={`https://img.youtube.com/vi/${getYouTubeId(block.videoUrl)}/mqdefault.jpg`}
+                            alt="Video Thumbnail"
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-black/35 flex items-center justify-center">
+                            <div className="w-8 h-8 rounded-full bg-red-600 flex items-center justify-center text-white shadow-lg">
+                              <svg className="w-4 h-4 fill-current ml-0.5" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z" />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <span className="text-[10px] text-red-500 font-extrabold uppercase tracking-widest block mb-0.5">YouTube Preview</span>
+                          <span className="text-xs text-white/60 font-mono block truncate">{block.videoUrl}</span>
+                          <span className="text-[10px] text-white/30 font-medium block mt-1">ID: {getYouTubeId(block.videoUrl)}</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

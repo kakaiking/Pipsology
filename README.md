@@ -46,7 +46,7 @@ A premium Forex education platform built with Next.js 15, React 19, and Tailwind
    npm run dev
    ```
 
-Open [http://localhost:3000/TradeyMarkets/](http://localhost:3000/TradeyMarkets/) with your browser to see the result.
+Open [http://localhost:3001/](http://localhost:3001/) with your browser to see the result.
 
 ## 📦 Deployment
 
