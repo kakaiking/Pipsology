@@ -82,7 +82,7 @@ export async function PUT(
             }
         }
 
-        // Update within a transaction
+        // Update lesson and sections transactionally
         const updated = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             // Delete all current sections
             await tx.lessonSection.deleteMany({
