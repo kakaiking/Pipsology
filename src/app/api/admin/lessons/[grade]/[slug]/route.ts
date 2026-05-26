@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserFromSession } from "@/lib/auth";
+import { Prisma } from "@prisma/client";
 
 export async function GET(
     req: Request,
@@ -82,7 +83,7 @@ export async function PUT(
         }
 
         // Update within a transaction
-        const updated = await prisma.$transaction(async (tx) => {
+        const updated = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             // Delete all current sections
             await tx.lessonSection.deleteMany({
                 where: { lessonId: existingLesson.id }

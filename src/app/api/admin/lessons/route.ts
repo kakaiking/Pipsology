@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getUserFromSession } from "@/lib/auth";
+import { Prisma } from "@prisma/client";
 
 export async function GET() {
     try {
@@ -51,7 +52,7 @@ export async function POST(req: Request) {
         }
 
         // Create lesson and sections transactionally
-        const newLesson = await prisma.$transaction(async (tx) => {
+        const newLesson = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
             const lesson = await tx.lesson.create({
                 data: {
                     title,
