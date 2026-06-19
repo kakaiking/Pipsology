@@ -188,7 +188,7 @@ export function Navbar() {
 
     const initial = user?.username?.trim()?.[0]?.toUpperCase() ?? "U";
 
-    if (pathname?.startsWith("/admin")) {
+    if (pathname?.startsWith("/admin") || pathname?.startsWith("/learn")) {
         return null;
     }
 

@@ -234,11 +234,11 @@ export default function VideosPage() {
     };
 
     return (
-        <div className="max-w-7xl mx-auto px-4 md:px-6 relative">
-            <div className="flex justify-center items-center py-2 relative w-full">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 relative" style={{ height: "calc(100vh - 40px)" }}>
+            <div className="flex justify-center items-center relative w-full" style={{ height: "100%" }}>
                 
                 {/* Snapping Scroll Area (occupies full container width & height) */}
-                <div className="w-full h-[83vh] rounded-3xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.6)] overflow-hidden relative bg-black flex flex-col">
+                <div className="w-full rounded-3xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.6)] overflow-hidden relative bg-black flex flex-col" style={{ height: "100%" }}>
                     <div
                         ref={containerRef}
                         className="flex-1 w-full h-full overflow-y-scroll snap-y snap-mandatory scrollbar-none"

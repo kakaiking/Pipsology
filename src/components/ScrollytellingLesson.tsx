@@ -8,7 +8,7 @@ import {
     History, MoveHorizontal, MapPin, Briefcase, Building, Scale, Lock, 
     Coins, AlertTriangle, Zap, Headphones, Wallet, Ruler, ClipboardList, 
     Smartphone, Rewind, Trophy, Eye, RefreshCw, Ghost, TrendingDown, BookOpen,
-    Play, Heart, Share2, Music, ChevronDown, Volume2, VolumeX,
+    Play, Heart, Share2, Music, Volume2, VolumeX,
     Maximize2, Minimize2
 } from "lucide-react";
 
@@ -250,9 +250,9 @@ export const ScrollytellingLesson: React.FC<ScrollytellingLessonProps> = ({ sect
     };
 
     return (
-        <div className="w-full relative flex flex-col items-center">
+        <div className="w-full h-full relative flex flex-col items-center">
             {/* Snapping Scroll Area (occupies full container width & height) */}
-            <div className="w-full h-[78vh] rounded-3xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.6)] overflow-hidden relative bg-[#040806] flex flex-col">
+            <div className="w-full h-full rounded-3xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.6)] overflow-hidden relative bg-[#040806] flex flex-col">
                 <div
                     ref={containerRef}
                     className="flex-1 w-full h-full overflow-y-scroll snap-y snap-mandatory scrollbar-none"
@@ -520,13 +520,7 @@ export const ScrollytellingLesson: React.FC<ScrollytellingLessonProps> = ({ sect
                     </div>
                 )}
 
-                {/* Swipe Indicator (Helpful UX) */}
-                {!isFullscreen && (
-                    <div className="absolute top-8 left-1/2 -translate-x-1/2 z-20 pointer-events-none text-white/40 text-[10px] flex flex-col items-center gap-1.5 animate-pulse">
-                        <span>Scroll down for next topic</span>
-                        <ChevronDown size={14} className="animate-bounce" />
-                    </div>
-                )}
+
 
                 {/* Link Share Toast */}
                 {showToast && (

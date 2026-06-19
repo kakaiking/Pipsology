@@ -49,10 +49,10 @@ export function LearnSidebar({ isCollapsed, onToggle }: { isCollapsed: boolean; 
 
     return (
         <aside
-            className={`fixed left-0 top-16 bottom-0 z-30 flex transition-all duration-300 ease-in-out border-r border-white/10 ${isCollapsed ? "w-16" : "w-72"
+            className={`fixed left-0 top-0 bottom-0 z-30 flex transition-all duration-300 ease-in-out border-r border-white/10 ${isCollapsed ? "w-16" : "w-72"
                 } bg-[#0a0f0d]/95 backdrop-blur-xl shadow-2x-l`}
         >
-            <div className={`flex flex-col w-full h-full ${isCollapsed ? "p-2" : "p-4"}`}>
+            <div className={`flex flex-col w-full h-full ${isCollapsed ? "p-2 pt-6" : "p-4 pt-6"}`}>
                 <div className={`flex items-center ${isCollapsed ? "justify-center px-0" : "justify-between px-2"} mb-10`}>
                     {!isCollapsed && <span className="text-sm font-bold text-white/40 uppercase tracking-widest">Curriculum</span>}
                     <button
